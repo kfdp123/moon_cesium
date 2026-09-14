@@ -96,8 +96,6 @@ export class MoonScene {
     });
     const { scene } = this.viewer;
     scene.backgroundColor = Color.TRANSPARENT;
-    scene.sun!.show = false;
-    scene.moon!.show = false;
     scene.globe.baseColor = Color.fromCssColorString("#666870");
     scene.globe.enableLighting = true;
     scene.globe.showGroundAtmosphere = false;
