@@ -17,6 +17,8 @@
 | @lucide/vue | 1.46.0 |
 | Vitest | 4.1.11 |
 | Prettier | 3.5.3 |
+| Playwright | 1.58.2 |
+| Chromium（浏览器回归） | 145.0.7632.6 |
 
 Cesium 的间接依赖必须一起固定：默认范围曾解析到 widgets 13.2.1，并带入另一个 engine 21.0.1，造成压缩库导出路径冲突。通过 overrides 固定与 Cesium 1.132.0 对应的组合，未修改 node_modules 源码或增加运行时兼容分支。
 

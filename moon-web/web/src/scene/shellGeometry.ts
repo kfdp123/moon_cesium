@@ -137,6 +137,7 @@ export function buildShell(
   outerRadius: number,
   mode: CutawayMode,
   segments = 96,
+  includeOuterSurface = true,
 ): ShellMesh[] {
   if (innerRadius < 0 || outerRadius <= innerRadius)
     throw new Error("圈层半径需要满足 0 ≤ 内半径 < 外半径");
@@ -147,7 +148,8 @@ export function buildShell(
         ? [Math.PI / 2, Math.PI * 1.5]
         : [Math.PI / 2, TAU];
   const shell = mesh("shell");
-  curvedSurface(shell, outerRadius, start, end, false, segments);
+  if (includeOuterSurface)
+    curvedSurface(shell, outerRadius, start, end, false, segments);
   if (innerRadius > 0)
     curvedSurface(shell, innerRadius, start, end, true, segments);
   if (mode === "full") return [shell];

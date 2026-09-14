@@ -5,4 +5,8 @@
 *.css text eol=lf
 *.json text eol=lf
 *.jpg binary
+*.glb binary
+*.bin binary
+*.geojson text eol=lf
+*.js text eol=lf
 moon-web/web/public/licenses/* -whitespace

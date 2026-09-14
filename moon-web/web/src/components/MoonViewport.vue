@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useExplorer } from "../stores/explorer";
+import { useCatalog } from "../stores/catalog";
+import type { NavigationMode } from "../types";
 import { MoonScene } from "../scene/MoonScene";
 
 const emit = defineEmits<{ ready: []; interact: [] }>();
 const explorer = useExplorer();
+const catalog = useCatalog();
 const container = ref<HTMLElement>();
 const status = ref<"loading" | "ready" | "error">("loading");
 const error = ref("");
@@ -13,14 +16,24 @@ let scene: MoonScene | undefined;
 async function initialize() {
   status.value = "loading";
   try {
-    scene = new MoonScene(container.value!, (selection) => {
-      explorer.selectedLayer =
-        selection?.kind === "layer" ? selection.id : null;
-      explorer.selectedLandmark =
-        selection?.kind === "landmark" ? selection.id : null;
-    });
-    scene.applyState(explorer.sceneState);
-    await scene.loadSurface();
+    scene = new MoonScene(
+      container.value!,
+      (selection) => {
+        explorer.selectedLayer =
+          selection?.kind === "layer" ? selection.id : null;
+        explorer.selectedLandmark =
+          selection?.kind === "landmark" ? selection.id : null;
+      },
+      (id, message) => {
+        catalog.layerStatus[id] = message;
+      },
+      (message) => {
+        error.value = message;
+        status.value = "error";
+      },
+    );
+    scene.applyState({ ...explorer.sceneState, points: catalog.points });
+    await scene.applyMaps(catalog.mapLayers);
     status.value = "ready";
     emit("ready");
   } catch (cause) {
@@ -36,8 +49,13 @@ function retry() {
 }
 
 watch(
-  () => explorer.sceneState,
+  () => ({ ...explorer.sceneState, points: catalog.points }),
   (state) => scene?.applyState(state),
+  { deep: true },
+);
+watch(
+  () => catalog.mapLayers,
+  (layers) => void scene?.applyMaps(layers),
   { deep: true },
 );
 onMounted(initialize);
@@ -47,6 +65,8 @@ defineExpose({
   zoom: (direction: "in" | "out") => scene?.zoom(direction),
   flyTo: (id: string) => scene?.flyToLandmark(id),
   capture: () => scene?.capture(),
+  navigate: (mode: NavigationMode) => scene?.setNavigation(mode),
+  reloadMaps: () => scene?.applyMaps(catalog.mapLayers, true),
 });
 </script>
 

@@ -1,0 +1,359 @@
+/* Controls share one small visual vocabulary across parameters and catalogs. */
+.left-panel {
+  width: 340px;
+  flex-basis: 340px;
+  max-height: calc(100dvh - 205px);
+  overflow-y: auto;
+}
+.left-panel h1 {
+  font-size: 29px;
+}
+.workspace {
+  min-height: 640px;
+}
+.left-panel .intro {
+  margin-bottom: 22px;
+}
+.left-panel .sidebar-footer {
+  margin-top: 24px;
+  position: static;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 12px;
+  color: #a7bac5;
+  margin: 13px 0;
+  flex: 1;
+  min-width: 0;
+}
+input:not([type="checkbox"]):not([type="range"]):not([type="color"]),
+select,
+textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #344550;
+  border-radius: 5px;
+  background: #101c25;
+  color: #e6edf0;
+  padding: 9px 10px;
+  font: inherit;
+}
+input[type="checkbox"] {
+  accent-color: #b8dacf;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+input[type="range"] {
+  width: 130px;
+  accent-color: #b8dacf;
+}
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #b8dacf;
+  outline-offset: 2px;
+}
+.horizontal {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+.horizontal input[type="number"] {
+  width: 115px;
+}
+.compact-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+  font-size: 12px;
+}
+.parameter-layer {
+  padding: 15px 0;
+  border-bottom: 1px solid #253039;
+}
+.color-input {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background: none;
+  border: 0;
+  flex-shrink: 0;
+}
+.text-button {
+  display: inline-block;
+  color: #a9c7c0;
+  font-size: 11px;
+  padding: 8px 7px 8px 0;
+}
+.secondary-button {
+  padding: 9px 12px;
+  border: 1px solid #42605e;
+  border-radius: 5px;
+  font-size: 12px;
+  color: #c4ddd5;
+  margin: 8px 0;
+}
+.form-error {
+  color: #f3ad93 !important;
+  font-size: 12px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12px;
+  margin: 12px 0;
+  line-height: 1.6;
+}
+.catalog-layer {
+  padding: 14px 0;
+  border-bottom: 1px solid #253039;
+}
+.catalog-layer p {
+  color: #91a4ae;
+  font-size: 11px;
+  line-height: 1.8;
+}
+.layer-status {
+  display: block;
+  color: #c3ae87;
+  font-size: 10px;
+  line-height: 1.6;
+  margin: 7px 0;
+  overflow-wrap: anywhere;
+}
+details {
+  margin-top: 20px;
+}
+summary {
+  cursor: pointer;
+  font-size: 13px;
+}
+.point-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 13px 0;
+  border-bottom: 1px solid #253039;
+  font-size: 11px;
+}
+.point-title {
+  flex: 1;
+  text-align: left;
+  line-height: 1.7;
+  font-size: 12px;
+}
+.point-title small {
+  display: block;
+  color: #80949e;
+  font-size: 10px;
+}
+.file-label {
+  display: block;
+  margin: 12px 0;
+  font-size: 11px;
+}
+.file-label input {
+  margin-top: 8px;
+}
+.point-editor {
+  width: min(720px, 95vw);
+  max-height: 90dvh;
+  overflow-y: auto;
+}
+.resource-editor {
+  margin: 16px 0;
+  border: 1px solid #344550;
+  border-radius: 5px;
+  padding: 10px;
+}
+.resource-editor legend {
+  font-size: 12px;
+}
+.resource-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr auto;
+  gap: 7px;
+  margin: 6px 0;
+  font-size: 12px;
+}
+.rich-detail {
+  top: 128px;
+  bottom: 90px;
+  max-height: none;
+  overflow-y: auto;
+  width: 340px;
+}
+.rich-detail h4 {
+  font-size: 12px;
+  margin: 22px 0 10px;
+  color: #c4d9d2;
+}
+.rich-detail figure {
+  margin: 10px 0;
+}
+.rich-detail img {
+  width: 100%;
+  border-radius: 5px;
+}
+.rich-detail figcaption {
+  font-size: 10px;
+  line-height: 1.6;
+  color: #91a4ae;
+}
+.rich-detail a {
+  display: block;
+  font-size: 11px;
+  margin: 9px 0;
+}
+.rich-detail .empty-resource {
+  font-size: 11px;
+  color: #7c929e;
+}
+.model-preview {
+  height: 230px;
+  position: relative;
+  margin-top: 10px;
+}
+.model-canvas {
+  position: absolute;
+  inset: 0;
+}
+.model-preview > p,
+.model-preview > span {
+  position: absolute;
+  left: 12px;
+  bottom: 8px;
+  font-size: 10px;
+  margin: 0;
+  pointer-events: none;
+}
+.navigation-card {
+  width: 100%;
+  text-align: left;
+  padding: 16px;
+  border: 1px solid #30434c;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+.navigation-card strong {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+.navigation-card small {
+  color: #9eb0bb;
+  font-size: 11px;
+  line-height: 1.8;
+}
+.navigation-card.active {
+  border-color: #b8dacf;
+  background: #19302e;
+}
+.roaming-help {
+  position: absolute;
+  bottom: 30px;
+  left: 30px;
+  right: 30px;
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  background: #0a141ee8;
+  padding: 15px;
+  border-radius: 7px;
+  font-size: 12px;
+  z-index: 2;
+}
+.roaming-help span {
+  color: #9db5c1;
+  flex: 1;
+}
+.roaming-help button {
+  color: #e6bb76;
+}
+.scene-message {
+  z-index: 10;
+}
+@media (max-width: 1100px) {
+  .app-header {
+    padding: 0 18px;
+    gap: 12px;
+  }
+  .brand-subtitle {
+    display: none;
+  }
+  .left-panel {
+    width: 290px;
+    flex-basis: 290px;
+  }
+  .rich-detail {
+    width: 290px;
+  }
+  .scene-tag {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  .app-header nav button:last-child,
+  .header-actions {
+    display: flex;
+  }
+  .app-header {
+    height: auto;
+    min-height: 100px;
+    flex-wrap: wrap;
+    padding: 14px;
+  }
+  .app-header nav {
+    order: 3;
+    width: 100%;
+    justify-content: space-between;
+    gap: 5px;
+  }
+  .app-header nav button {
+    padding: 8px;
+    font-size: 12px;
+  }
+  .workspace {
+    display: flex;
+    flex-direction: column;
+  }
+  .left-panel {
+    width: 100%;
+    max-height: 400px;
+    flex-basis: auto;
+    padding: 22px;
+  }
+  .scene-stage {
+    min-height: 600px;
+  }
+  .rich-detail {
+    top: 100px;
+    bottom: 70px;
+    right: 15px;
+    width: min(320px, calc(100% - 30px));
+  }
+  .timeline-panel {
+    overflow-x: auto;
+  }
+  .timeline-track {
+    min-width: 500px;
+  }
+  .timeline-label {
+    display: none;
+  }
+  .roaming-help {
+    left: 10px;
+    right: 10px;
+    flex-wrap: wrap;
+  }
+  .roaming-help span {
+    flex-basis: 100%;
+  }
+}
