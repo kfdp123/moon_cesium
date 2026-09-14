@@ -82,6 +82,8 @@ export class MoonScene {
       geocoder: false,
       homeButton: false,
       sceneModePicker: false,
+      // Interior cut faces contain the center, which has no 2D map projection.
+      scene3DOnly: true,
       timeline: false,
       animation: false,
       navigationHelpButton: false,
