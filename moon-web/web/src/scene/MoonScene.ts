@@ -115,7 +115,7 @@ export class MoonScene {
     this.configureGlobe();
     this.viewer.resolutionScale = Math.min(window.devicePixelRatio, 1.5);
     this.mapLayers = new MapLayers(this.viewer, reportLayer);
-    this.navigation = new SurfaceNavigation(this.viewer, reportError);
+    this.navigation = new SurfaceNavigation(this.viewer);
     this.viewer.screenSpaceEventHandler.removeInputAction(
       ScreenSpaceEventType.LEFT_DOUBLE_CLICK,
     );

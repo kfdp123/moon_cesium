@@ -1,4 +1,83 @@
 /* Controls share one small visual vocabulary across parameters and catalogs. */
+.parameter-slider input[type="range"] {
+  width: 100%;
+  height: 24px;
+  cursor: ew-resize;
+}
+.parameter-slider .field {
+  margin-bottom: 4px;
+}
+.slider-scale {
+  display: flex;
+  justify-content: space-between;
+  color: #718894;
+  font-size: 10px;
+}
+.layer-tree {
+  margin-top: 16px;
+}
+.tree-group {
+  margin: 5px 0;
+}
+.tree-group-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-right: 10px;
+  background: #182932;
+  border-radius: 5px;
+}
+.tree-group-heading button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  padding: 12px 8px;
+  text-align: left;
+  font-size: 12px;
+  color: #c6ded9;
+}
+.tree-group-heading small {
+  color: #7f989f;
+  margin-left: auto;
+}
+.tree-children {
+  margin: 0 0 8px 14px;
+  padding-left: 12px;
+  border-left: 1px solid #35505a;
+}
+.tree-leaf.catalog-layer {
+  padding: 6px 0;
+}
+.tree-leaf-heading {
+  display: flex;
+  align-items: center;
+}
+.tree-leaf .checkbox-row {
+  flex: 1;
+  margin: 0;
+  min-height: 36px;
+  cursor: pointer;
+}
+.tree-settings {
+  padding: 10px 7px;
+  color: #a0bbb7;
+}
+.tree-settings[aria-expanded="true"] {
+  background: #29453f;
+  border-radius: 4px;
+}
+.tree-leaf .layer-status {
+  margin: 0 0 5px 25px;
+}
+.tree-layer-settings {
+  background: #13232b;
+  padding: 10px;
+  border-radius: 5px;
+}
+.tree-layer-settings .compact-row {
+  gap: 6px;
+}
 .left-panel {
   width: 340px;
   flex-basis: 340px;
@@ -7,6 +86,11 @@
 }
 .left-panel h1 {
   font-size: 29px;
+}
+.left-panel .workspace-title {
+  font-size: 24px;
+  margin: 14px 0 18px;
+  line-height: 1.3;
 }
 .workspace {
   min-height: 640px;

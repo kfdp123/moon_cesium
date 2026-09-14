@@ -4,7 +4,20 @@ import {
   Ellipsoid,
   Math as CesiumMath,
   Credit,
+  type TerrainProvider,
 } from "cesium";
+
+const terrainGrids = new WeakMap<TerrainProvider, Int16Array>();
+
+/** The same grid drives terrain tiles and surface walking, independent of tile loading/LOD. */
+export function terrainHeightAt(
+  provider: TerrainProvider,
+  longitude: number,
+  latitude: number,
+) {
+  const grid = terrainGrids.get(provider);
+  return grid ? sampleElevation(grid, longitude, latitude) : 0;
+}
 
 // NASA's 1440×720 cell-centered, east-positive grid. Heights are signed meters.
 export function sampleElevation(
@@ -34,7 +47,7 @@ export async function loadLunarTerrain(url: string, ellipsoid: Ellipsoid) {
     throw new Error("高程网格尺寸不匹配");
   const grid = new Int16Array(buffer);
   const scheme = new GeographicTilingScheme({ ellipsoid });
-  return new CustomHeightmapTerrainProvider({
+  const provider = new CustomHeightmapTerrainProvider({
     width: 33,
     height: 33,
     tilingScheme: scheme,
@@ -59,4 +72,6 @@ export async function loadLunarTerrain(url: string, ellipsoid: Ellipsoid) {
       return heights;
     },
   });
+  terrainGrids.set(provider, grid);
+  return provider;
 }

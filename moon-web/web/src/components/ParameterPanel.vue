@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useExplorer } from "../stores/explorer";
+import ParameterSlider from "./ParameterSlider.vue";
 const explorer = useExplorer();
 const error = ref("");
 function apply(action: () => void) {
@@ -11,26 +12,21 @@ function apply(action: () => void) {
     error.value = String(cause);
   }
 }
-function number(event: Event) {
-  return Number((event.target as HTMLInputElement).value);
-}
 </script>
 
 <template>
   <section class="panel-section parameter-panel">
     <div class="section-label">模型参数 <small>教学示意</small></div>
-    <label class="field"
-      >总半径 / km<input
-        aria-label="总半径"
-        type="number"
-        min="100"
-        max="10000"
-        step="10"
-        :value="explorer.radiusKm.toFixed(1)"
-        @change="apply(() => explorer.setRadius(number($event)))"
-    /></label>
+    <ParameterSlider
+      label="总半径"
+      :value="explorer.radiusKm"
+      :min="100"
+      :max="10000"
+      :step="10"
+      @change="(value) => apply(() => explorer.setRadius(value))"
+    />
     <p class="panel-note">
-      调整总半径会同比缩放圈层；修改厚度会重新计算总半径。由外向内排列。
+      拖动滑块、松开更新模型；选中滑块后可用滚轮微调。总半径同比缩放圈层，厚度调整会重算总半径。
     </p>
     <div
       v-for="layer in explorer.layers"
@@ -56,18 +52,27 @@ function number(event: Event) {
           ×
         </button>
       </div>
-      <label class="field horizontal"
-        >厚度 / km<input
-          type="number"
-          min="1"
-          max="5000"
-          step="1"
-          :aria-label="`${layer.name}厚度`"
-          :value="(layer.outerRadiusKm - layer.innerRadiusKm).toFixed(1)"
-          @change="
-            apply(() => explorer.setThickness(layer.id, number($event)))
-          "
-      /></label>
+      <ParameterSlider
+        :label="`${layer.name}厚度`"
+        :value="layer.outerRadiusKm - layer.innerRadiusKm"
+        :min="
+          Math.max(
+            1,
+            100 - explorer.radiusKm + layer.outerRadiusKm - layer.innerRadiusKm,
+          )
+        "
+        :max="
+          Math.min(
+            5000,
+            10000 -
+              explorer.radiusKm +
+              layer.outerRadiusKm -
+              layer.innerRadiusKm,
+          )
+        "
+        :step="1"
+        @change="(value) => apply(() => explorer.setThickness(layer.id, value))"
+      />
       <button
         class="text-button"
         :aria-pressed="!explorer.hiddenLayers.includes(layer.id)"

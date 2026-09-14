@@ -6,28 +6,28 @@ import {
   Primitive,
   PrimitiveCollection,
   PerInstanceColorAppearance,
-  Cartographic,
   Color,
   Matrix4,
   Transforms,
   Viewer,
-  EllipsoidTerrainProvider,
-  sampleTerrain,
+  Math as CesiumMath,
 } from "cesium";
 import type { NavigationMode } from "../types";
+import { terrainHeightAt } from "./lunarTerrain";
+import { regolithMaterial } from "./regolithMaterial";
 
-/** Local ENU teaching stage. The base and astronaut are original schematic geometry. */
+/** Walk on the lunar globe. Only the base and astronaut are schematic geometry. */
 export class SurfaceNavigation {
   private mode: NavigationMode = "orbit";
   private frame = Matrix4.clone(Matrix4.IDENTITY);
   private readonly models = new PrimitiveCollection();
   private avatar: { primitive: Primitive; offset: Cartesian3 }[] = [];
   private keys = new Set<string>();
-  private position = new Cartesian3(0, -45, 0);
+  private position = new Cartesian3(90, -160, 0);
   private heading = 0;
   private pitch = 0;
   private lastTime = performance.now();
-  private revision = 0;
+  private originalNear = 1;
   private removeTick: () => void;
   private readonly keydown = (event: KeyboardEvent) => {
     if (this.mode === "orbit" || document.activeElement !== this.viewer.canvas)
@@ -53,10 +53,8 @@ export class SurfaceNavigation {
     this.keys.delete(event.code);
   private readonly blur = () => this.keys.clear();
 
-  constructor(
-    private viewer: Viewer,
-    private reportError: (message: string) => void,
-  ) {
+  constructor(private viewer: Viewer) {
+    this.originalNear = viewer.camera.frustum.near;
     viewer.canvas.tabIndex = 0;
     viewer.scene.primitives.add(this.models);
     viewer.canvas.addEventListener("keydown", this.keydown);
@@ -68,38 +66,29 @@ export class SurfaceNavigation {
     );
   }
 
-  async setMode(mode: NavigationMode) {
-    const revision = ++this.revision;
+  setMode(mode: NavigationMode) {
     this.clear();
     this.mode = "orbit";
     const camera = this.viewer.camera;
     camera.cancelFlight();
     this.viewer.scene.screenSpaceCameraController.enableInputs =
       mode === "orbit";
-    if (mode === "orbit") return;
-    const ellipsoid = this.viewer.scene.globe.ellipsoid;
-    const site = Cartographic.fromDegrees(-20, 10);
-    // A coarse globe tile is a chord below the sphere; getHeight can place a base underground.
-    let height = 0;
-    if (!(this.viewer.terrainProvider instanceof EllipsoidTerrainProvider)) {
-      try {
-        height = (
-          await sampleTerrain(this.viewer.terrainProvider, 5, [site])
-        )[0].height;
-      } catch (cause) {
-        this.reportError(`基地高程采样失败：${String(cause)}`);
-        return;
-      }
+    if (mode === "orbit") {
+      camera.frustum.near = this.originalNear;
+      this.viewer.scene.globe.material = undefined;
+      return;
     }
-    if (revision !== this.revision) return;
+    camera.frustum.near = 0.1;
+    const ellipsoid = this.viewer.scene.globe.ellipsoid;
     this.mode = mode;
     this.frame = Transforms.eastNorthUpToFixedFrame(
-      Cartesian3.fromDegrees(-20, 10, height + 3, ellipsoid),
+      Cartesian3.fromDegrees(-20, 10, 0, ellipsoid),
       ellipsoid,
     );
-    this.position = new Cartesian3(0, -45, 0);
-    this.heading = 0;
-    this.pitch = -0.05;
+    this.position = new Cartesian3(90, -160, 0);
+    this.viewer.scene.globe.material = regolithMaterial(this.frame);
+    this.heading = -0.48;
+    this.pitch = 0.02;
     this.createBase();
     this.lastTime = performance.now();
     this.viewer.canvas.focus();
@@ -107,7 +96,26 @@ export class SurfaceNavigation {
   }
 
   private world(local: Cartesian3) {
-    return Matrix4.multiplyByPoint(this.frame, local, new Cartesian3());
+    const ellipsoid = this.viewer.scene.globe.ellipsoid;
+    const flat = Matrix4.multiplyByPoint(
+      this.frame,
+      new Cartesian3(local.x, local.y, 0),
+      new Cartesian3(),
+    );
+    const site = ellipsoid.cartesianToCartographic(flat);
+    site.height =
+      terrainHeightAt(
+        this.viewer.terrainProvider,
+        CesiumMath.toDegrees(site.longitude),
+        CesiumMath.toDegrees(site.latitude),
+      ) + local.z;
+    return ellipsoid.cartographicToCartesian(site);
+  }
+  private modelFrame(local: Cartesian3) {
+    return Transforms.eastNorthUpToFixedFrame(
+      this.world(local),
+      this.viewer.scene.globe.ellipsoid,
+    );
   }
   private box(local: Cartesian3, size: Cartesian3, color: Color) {
     return this.models.add(
@@ -123,11 +131,7 @@ export class SurfaceNavigation {
             color: ColorGeometryInstanceAttribute.fromColor(color),
           },
         }),
-        modelMatrix: Matrix4.multiplyByTranslation(
-          this.frame,
-          local,
-          new Matrix4(),
-        ),
+        modelMatrix: this.modelFrame(local),
         appearance: new PerInstanceColorAppearance({
           translucent: false,
           closed: true,
@@ -138,11 +142,6 @@ export class SurfaceNavigation {
     );
   }
   private createBase() {
-    this.box(
-      new Cartesian3(0, 0, -0.3),
-      new Cartesian3(300, 300, 0.6),
-      Color.fromCssColorString("#5e6267"),
-    );
     for (const x of [-20, 20]) {
       this.box(
         new Cartesian3(x, 15, 5),
@@ -214,9 +213,9 @@ export class SurfaceNavigation {
     if (this.mode === "base-tour") {
       this.heading += dt * 0.15;
       eye = new Cartesian3(
-        Math.sin(this.heading) * 95,
-        Math.cos(this.heading) * 95,
-        35,
+        Math.sin(this.heading) * 180,
+        Math.cos(this.heading) * 180,
+        45,
       );
       direction = Cartesian3.normalize(
         Cartesian3.subtract(new Cartesian3(0, 15, 5), eye, new Cartesian3()),
@@ -252,25 +251,22 @@ export class SurfaceNavigation {
         0,
       );
       const hitsHabitat = next.y > -0.5 && next.y < 31 && Math.abs(next.x) < 31;
-      if (!hitsHabitat && Math.abs(next.x) < 140 && Math.abs(next.y) < 140)
-        this.position = next;
+      if (!hitsHabitat) this.position = next;
       const third = this.mode === "third-person";
       eye = new Cartesian3(
-        this.position.x - (third ? Math.sin(this.heading) * 5 : 0),
-        this.position.y - (third ? Math.cos(this.heading) * 5 : 0),
-        third ? 3.5 : 1.8,
+        this.position.x - (third ? Math.sin(this.heading) * 8 : 0),
+        this.position.y - (third ? Math.cos(this.heading) * 8 : 0),
+        third ? 3.2 : 1.8,
       );
-      const pitch = third ? -0.32 : this.pitch;
+      const pitch = third ? this.pitch - 0.16 : this.pitch;
       direction = new Cartesian3(
         Math.sin(this.heading) * Math.cos(pitch),
         Math.cos(this.heading) * Math.cos(pitch),
         Math.sin(pitch),
       );
       for (const { primitive, offset } of this.avatar)
-        primitive.modelMatrix = Matrix4.multiplyByTranslation(
-          this.frame,
+        primitive.modelMatrix = this.modelFrame(
           Cartesian3.add(this.position, offset, new Cartesian3()),
-          new Matrix4(),
         );
     }
     const up = new Cartesian3(
@@ -300,7 +296,6 @@ export class SurfaceNavigation {
     this.avatar = [];
   }
   dispose() {
-    this.revision++;
     this.clear();
     this.viewer.scene.primitives.remove(this.models);
     this.removeTick();

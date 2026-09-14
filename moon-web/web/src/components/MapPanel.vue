@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
+import {
+  ChevronDown,
+  ChevronRight,
+  SlidersHorizontal,
+  FolderOpen,
+} from "@lucide/vue";
 import { useCatalog } from "../stores/catalog";
 import { validUrl } from "../data/pointFiles";
 const catalog = useCatalog();
@@ -8,6 +14,36 @@ const name = ref("");
 const url = ref("");
 const kind = ref<"image" | "xyz">("xyz");
 const error = ref("");
+const collapsed = ref<string[]>([]);
+const selected = ref<string | null>(null);
+const groups = computed(() => {
+  const definitions = [
+    { id: "imagery", name: "月表影像", ids: ["local-lro", "wac"] },
+    {
+      id: "terrain",
+      name: "地形与高程",
+      ids: ["lola-dem", "lola-color", "lola-shade"],
+    },
+    { id: "geology", name: "地质专题", ids: ["geology"] },
+    { id: "custom", name: "自定义图层", ids: [] as string[] },
+  ];
+  const builtIn = definitions.flatMap((group) => group.ids);
+  return definitions
+    .map((group) => ({
+      ...group,
+      layers: catalog.mapLayers.filter((layer) =>
+        group.id === "custom"
+          ? !builtIn.includes(layer.id)
+          : group.ids.includes(layer.id),
+      ),
+    }))
+    .filter((group) => group.layers.length);
+});
+function toggleGroup(id: string) {
+  collapsed.value = collapsed.value.includes(id)
+    ? collapsed.value.filter((value) => value !== id)
+    : [...collapsed.value, id];
+}
 function saveConfig() {
   try {
     catalog.saveMaps();
@@ -64,42 +100,110 @@ function move(index: number, step: number) {
       <button class="text-button" @click="emit('retry')">重试加载</button>
     </div>
     <p class="panel-note">
-      下方图层覆盖上方图层。在线数据均为现今月表；早期场景叠加时仅作位置参照。
+      勾选显示，点击右侧按钮调节图层。叠放序号越大越靠上。
     </p>
-    <div
-      v-for="(layer, index) in catalog.mapLayers"
-      :key="layer.id"
-      class="catalog-layer"
-    >
-      <label class="checkbox-row"
-        ><input type="checkbox" v-model="layer.visible" />{{
-          layer.name
-        }}</label
-      >
-      <p>{{ layer.description }}</p>
-      <label v-if="layer.kind !== 'terrain'" class="field horizontal"
-        >透明度<input
-          type="range"
-          min="0"
-          max="1"
-          step="0.05"
-          v-model.number="layer.opacity"
-          :aria-label="`${layer.name}透明度`"
-      /></label>
-      <small class="layer-status">{{
-        catalog.layerStatus[layer.id] || "等待加载"
-      }}</small>
-      <div class="compact-row">
-        <a :href="layer.source" target="_blank" rel="noreferrer">来源 ↗</a
-        ><button :disabled="index === 0" @click="move(index, -1)">↑</button
-        ><button
-          :disabled="index === catalog.mapLayers.length - 1"
-          @click="move(index, 1)"
-        >
-          ↓</button
-        ><button @click="catalog.mapLayers.splice(index, 1)">删除</button>
-      </div>
+    <div class="layer-tree" aria-label="地图图层树">
+      <section v-for="group in groups" :key="group.id" class="tree-group">
+        <div class="tree-group-heading">
+          <button
+            :aria-label="`${group.name}分组`"
+            :aria-expanded="!collapsed.includes(group.id)"
+            @click="toggleGroup(group.id)"
+          >
+            <ChevronRight
+              v-if="collapsed.includes(group.id)"
+              :size="15"
+            /><ChevronDown v-else :size="15" /> <FolderOpen :size="16" />{{
+              group.name
+            }}<small>{{ group.layers.length }}</small>
+          </button>
+          <input
+            type="checkbox"
+            :aria-label="`显示全部${group.name}`"
+            :checked="group.layers.every((layer) => layer.visible)"
+            :indeterminate="
+              group.layers.some((layer) => layer.visible) &&
+              !group.layers.every((layer) => layer.visible)
+            "
+            @change="
+              group.layers.forEach(
+                (layer) =>
+                  (layer.visible = ($event.target as HTMLInputElement).checked),
+              )
+            "
+          />
+        </div>
+        <div v-show="!collapsed.includes(group.id)" class="tree-children">
+          <div
+            v-for="layer in group.layers"
+            :key="layer.id"
+            class="catalog-layer tree-leaf"
+          >
+            <div class="tree-leaf-heading">
+              <label class="checkbox-row"
+                ><input type="checkbox" v-model="layer.visible" />{{
+                  layer.name
+                }}</label
+              >
+              <button
+                class="tree-settings"
+                :aria-label="`${layer.name}设置`"
+                :aria-expanded="selected === layer.id"
+                @click="selected = selected === layer.id ? null : layer.id"
+              >
+                <SlidersHorizontal :size="16" />
+              </button>
+            </div>
+            <small class="layer-status">{{
+              catalog.layerStatus[layer.id] || "等待加载"
+            }}</small>
+            <div v-if="selected === layer.id" class="tree-layer-settings">
+              <p>{{ layer.description }}</p>
+              <label v-if="layer.kind !== 'terrain'" class="field horizontal"
+                >透明度<input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  v-model.number="layer.opacity"
+                  :aria-label="`${layer.name}透明度`"
+              /></label>
+              <div class="compact-row">
+                <a :href="layer.source" target="_blank" rel="noreferrer"
+                  >来源 ↗</a
+                ><span>叠放 {{ catalog.mapLayers.indexOf(layer) + 1 }}</span
+                ><button
+                  :aria-label="`${layer.name}下移`"
+                  :disabled="catalog.mapLayers.indexOf(layer) === 0"
+                  @click="move(catalog.mapLayers.indexOf(layer), -1)"
+                >
+                  ↓</button
+                ><button
+                  :aria-label="`${layer.name}上移`"
+                  :disabled="
+                    catalog.mapLayers.indexOf(layer) ===
+                    catalog.mapLayers.length - 1
+                  "
+                  @click="move(catalog.mapLayers.indexOf(layer), 1)"
+                >
+                  ↑</button
+                ><button
+                  @click="
+                    catalog.mapLayers.splice(
+                      catalog.mapLayers.indexOf(layer),
+                      1,
+                    )
+                  "
+                >
+                  删除
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
+    <p class="panel-note">在线数据为现今月表，早期场景仅作位置参照。</p>
     <details>
       <summary>添加在线图层</summary>
       <label class="field">图层名称<input v-model="name" /></label>

@@ -48,7 +48,7 @@ const sceneModes: { id: NavigationMode; name: string; description: string }[] =
     {
       id: "first-person",
       name: "第一视角漫游",
-      description: "在示意基地平台步行，WASD 移动，方向键转头。",
+      description: "在开阔月表步行，WASD 移动，方向键转头，Shift 加速。",
     },
     {
       id: "base-tour",
@@ -58,7 +58,7 @@ const sceneModes: { id: NavigationMode; name: string; description: string }[] =
     {
       id: "third-person",
       name: "人物第三视角",
-      description: "跟随示意宇航员步行，WASD 移动、左右方向键转向。",
+      description: "跟随宇航员探索月表，可自由走离基地，方向键调节视角。",
     },
   ];
 let timer: ReturnType<typeof setInterval> | undefined;
@@ -235,11 +235,24 @@ onBeforeUnmount(() => {
         <div class="eyebrow">
           <span class="tiny-line" /> ONE MOON · MANY STORIES
         </div>
-        <h1>打开月球的<br />每一层故事。</h1>
-        <p class="intro">
-          统一的参数模型，连接月表、内部与演化。所有圈层尺寸均为可调整的教学示意。
+        <h1 class="workspace-title">
+          {{
+            {
+              parameters: "月球参数模型",
+              maps: "图层管理",
+              points: "科普点位",
+              scenes: "月表漫游",
+            }[tab]
+          }}
+        </h1>
+        <p v-if="tab === 'parameters'" class="intro">
+          调整圈层与年代，查看月表和内部。当前参数为教学示意。
         </p>
-        <div class="cutaway-options" aria-label="剖切方式">
+        <div
+          v-if="tab === 'parameters'"
+          class="cutaway-options"
+          aria-label="剖切方式"
+        >
           <button
             v-for="cut in cuts"
             :key="cut.id"
@@ -282,8 +295,8 @@ onBeforeUnmount(() => {
             ><small>{{ mode.description }}</small>
           </button>
           <p class="panel-note">
-            基地位于示意坐标
-            20°W、10°N，不对应真实设施。平台与人物为原创简化模型，包含基础舱体阻挡；不是月面真实碰撞模拟。
+            从 20°W、10°N 附近的开阔月表出发，可走离基地。启用 DEM
+            时随高程行走；近景月壤纹理、基地与人物为示意，全球数据不含米级地貌。
           </p>
           <p class="panel-note">
             更大的太阳系场景可扩展，当前优先完成月球。<a
@@ -468,7 +481,7 @@ onBeforeUnmount(() => {
           着陆目标资料。大地貌的矢量点表示中心，不是范围边界。可在点位管理中编辑、导入、导出。
         </p>
         <p>
-          基地及人物是原创示意几何。漫游使用示意平台；年代参数、图层配置和点位修改可保存在本浏览器。后续接入服务端共享管理。
+          基地及人物是原创示意几何，漫游沿月球表面行走。年代参数、图层配置和点位修改可保存在本浏览器。后续接入服务端共享管理。
         </p>
         <a
           href="https://svs.gsfc.nasa.gov/4720/"

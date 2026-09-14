@@ -78,7 +78,7 @@ test("parameter scene, catalogs, model and navigation", async ({ page }) => {
   await page.keyboard.up("KeyW");
   await page.getByRole("button", { name: "退出漫游", exact: true }).click();
   await page.getByRole("button", { name: "图层管理", exact: true }).click();
-  await page.getByLabel("LOLA 三维高程 · 0.25°").check();
+  await page.getByLabel("LOLA 三维高程 · 0.25°", { exact: true }).check();
   await expect(
     page
       .locator(".catalog-layer")
