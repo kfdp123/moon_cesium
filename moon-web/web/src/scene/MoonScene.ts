@@ -386,7 +386,7 @@ export class MoonScene {
         },
         label: {
           text: place.name,
-          font: "13px sans-serif",
+          font: "16px sans-serif",
           fillColor: Color.WHITE,
           verticalOrigin: VerticalOrigin.BOTTOM,
           pixelOffset: new Cartesian2(0, -12),

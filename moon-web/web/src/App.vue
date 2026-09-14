@@ -11,6 +11,13 @@ import {
   Plus,
   RotateCcw,
   X,
+  Layers,
+  SlidersHorizontal,
+  MapPin,
+  Footprints,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Type,
 } from "@lucide/vue";
 import MoonViewport from "./components/MoonViewport.vue";
 import ParameterPanel from "./components/ParameterPanel.vue";
@@ -30,6 +37,14 @@ const playing = ref(false);
 const aboutOpen = ref(false);
 const notice = ref("");
 const navigation = ref<NavigationMode>("orbit");
+const largeText = ref(false);
+const panelOpen = ref(true);
+const workspaces = [
+  { id: "parameters", label: "参数模型", icon: SlidersHorizontal },
+  { id: "maps", label: "图层管理", icon: Layers },
+  { id: "points", label: "点位管理", icon: MapPin },
+  { id: "scenes", label: "漫游场景", icon: Footprints },
+] as const;
 const landmark = computed(() =>
   catalog.points.find((p) => p.id === explorer.selectedLandmark),
 );
@@ -188,7 +203,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="app-shell">
+  <div
+    class="app-shell"
+    :class="{ 'large-text': largeText, 'panel-collapsed': !panelOpen }"
+  >
     <header class="app-header">
       <a
         class="brand"
@@ -205,19 +223,26 @@ onBeforeUnmount(() => {
       >
       <nav aria-label="工作区">
         <button
-          :class="{ active: tab === 'parameters' }"
-          @click="tab = 'parameters'"
+          v-for="item in workspaces"
+          :key="item.id"
+          :class="{ active: tab === item.id }"
+          :aria-pressed="tab === item.id"
+          @click="
+            tab = item.id;
+            panelOpen = true;
+          "
         >
-          参数模型</button
-        ><button :class="{ active: tab === 'maps' }" @click="tab = 'maps'">
-          图层管理</button
-        ><button :class="{ active: tab === 'points' }" @click="tab = 'points'">
-          点位管理</button
-        ><button :class="{ active: tab === 'scenes' }" @click="tab = 'scenes'">
-          漫游场景
+          <component :is="item.icon" :size="20" />{{ item.label }}
         </button>
       </nav>
       <div class="header-actions">
+        <button
+          class="text-size-button"
+          :aria-pressed="largeText"
+          @click="largeText = !largeText"
+        >
+          <Type :size="20" />{{ largeText ? "标准字号" : "大字模式" }}
+        </button>
         <button @click="aboutOpen = true">数据与说明</button
         ><button class="icon-button" aria-label="全屏" @click="fullscreen">
           <Expand :size="18" />
@@ -226,25 +251,32 @@ onBeforeUnmount(() => {
     </header>
     <main class="workspace">
       <aside
+        v-show="panelOpen"
         class="left-panel"
         @input="
           pause();
           stopNavigation();
         "
       >
-        <div class="eyebrow">
-          <span class="tiny-line" /> ONE MOON · MANY STORIES
+        <div class="panel-heading">
+          <h1 class="workspace-title">
+            {{
+              {
+                parameters: "月球参数模型",
+                maps: "图层管理",
+                points: "科普点位",
+                scenes: "月表漫游",
+              }[tab]
+            }}
+          </h1>
+          <button
+            class="icon-button"
+            aria-label="收起操作面板"
+            @click="panelOpen = false"
+          >
+            <PanelLeftClose :size="22" />
+          </button>
         </div>
-        <h1 class="workspace-title">
-          {{
-            {
-              parameters: "月球参数模型",
-              maps: "图层管理",
-              points: "科普点位",
-              scenes: "月表漫游",
-            }[tab]
-          }}
-        </h1>
         <p v-if="tab === 'parameters'" class="intro">
           调整圈层与年代，查看月表和内部。当前参数为教学示意。
         </p>
@@ -310,13 +342,22 @@ onBeforeUnmount(() => {
         <div class="sidebar-footer">
           <span class="status-dot" :class="{ ready }" />{{
             ready ? "场景已就绪" : "正在准备场景"
-          }}<span>V0.2</span>
+          }}<span>月球探索工作台</span>
         </div>
       </aside>
       <section class="scene-stage" aria-label="月球探索工作区">
+        <button
+          v-if="!panelOpen"
+          class="show-panel-button"
+          @click="panelOpen = true"
+        >
+          <PanelLeftOpen :size="20" />展开操作面板
+        </button>
         <MoonViewport ref="viewport" @ready="ready = true" @interact="pause" />
         <div class="scene-heading">
-          <span class="eyebrow">LUNAR PARAMETRIC WORLD</span>
+          <span class="eyebrow"
+            >月球 · {{ navigation === "orbit" ? "三维探索" : "月表漫游" }}</span
+          >
           <h2>{{ explorer.epoch.label }}</h2>
           <span class="scene-subtitle"
             >{{ explorer.epoch.age }} · {{ explorer.layers.length }} 个圈层 ·

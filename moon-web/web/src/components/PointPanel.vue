@@ -105,15 +105,18 @@ function toggle(point: LunarPoint) {
         导出
       </button>
     </div>
-    <label class="file-label"
-      >导入 GeoJSON<input
-        type="file"
-        accept=".geojson,.json"
-        @change="importFile"
-    /></label>
-    <p class="panel-note">
-      月球东经为正、纬度为行星心纬度。修改保存在本浏览器；导出可备份或分享。目录默认只显示精选点位。
-    </p>
+    <details class="catalog-import">
+      <summary>导入与数据说明</summary>
+      <label class="file-label"
+        >导入 GeoJSON<input
+          type="file"
+          accept=".geojson,.json"
+          @change="importFile"
+      /></label>
+      <p class="panel-note">
+        月球东经为正、纬度为行星心纬度。修改保存在本浏览器；导出可备份或分享。目录默认只显示精选点位。
+      </p>
+    </details>
     <div v-for="point in visible" :key="point.id" class="point-row">
       <input
         type="checkbox"

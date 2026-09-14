@@ -10,8 +10,8 @@
 .slider-scale {
   display: flex;
   justify-content: space-between;
-  color: #718894;
-  font-size: 10px;
+  color: #a4bac6;
+  font-size: 0.875rem;
 }
 .layer-tree {
   margin-top: 16px;
@@ -34,7 +34,7 @@
   flex: 1;
   padding: 12px 8px;
   text-align: left;
-  font-size: 12px;
+  font-size: 1rem;
   color: #c6ded9;
 }
 .tree-group-heading small {
@@ -78,43 +78,21 @@
 .tree-layer-settings .compact-row {
   gap: 6px;
 }
-.left-panel {
-  width: 340px;
-  flex-basis: 340px;
-  max-height: calc(100dvh - 205px);
-  overflow-y: auto;
-}
-.left-panel h1 {
-  font-size: 29px;
-}
-.left-panel .workspace-title {
-  font-size: 24px;
-  margin: 14px 0 18px;
-  line-height: 1.3;
-}
-.workspace {
-  min-height: 640px;
-}
-.left-panel .intro {
-  margin-bottom: 22px;
-}
-.left-panel .sidebar-footer {
-  margin-top: 24px;
-  position: static;
-}
 .field {
   display: flex;
   flex-direction: column;
   gap: 7px;
-  font-size: 12px;
+  font-size: 1rem;
   color: #a7bac5;
   margin: 13px 0;
   flex: 1;
   min-width: 0;
 }
-input:not([type="checkbox"]):not([type="range"]):not([type="color"]),
-select,
-textarea {
+:where(
+  input:not([type="checkbox"]):not([type="range"]):not([type="color"]),
+  select,
+  textarea
+) {
   width: 100%;
   min-width: 0;
   border: 1px solid #344550;
@@ -126,8 +104,8 @@ textarea {
 }
 input[type="checkbox"] {
   accent-color: #b8dacf;
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
 }
 input[type="range"] {
@@ -146,22 +124,22 @@ textarea:focus-visible {
   justify-content: space-between;
 }
 .horizontal input[type="number"] {
-  width: 115px;
+  width: 8rem;
 }
 .compact-row {
   display: flex;
   align-items: center;
   gap: 10px;
   justify-content: space-between;
-  font-size: 12px;
+  font-size: 1rem;
 }
 .parameter-layer {
   padding: 15px 0;
   border-bottom: 1px solid #253039;
 }
 .color-input {
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
   padding: 0;
   background: none;
   border: 0;
@@ -170,20 +148,20 @@ textarea:focus-visible {
 .text-button {
   display: inline-block;
   color: #a9c7c0;
-  font-size: 11px;
+  font-size: 0.875rem;
   padding: 8px 7px 8px 0;
 }
 .secondary-button {
   padding: 9px 12px;
   border: 1px solid #42605e;
   border-radius: 5px;
-  font-size: 12px;
+  font-size: 1rem;
   color: #c4ddd5;
   margin: 8px 0;
 }
 .form-error {
   color: #f3ad93 !important;
-  font-size: 12px;
+  font-size: 1rem;
   line-height: 1.7;
   overflow-wrap: anywhere;
 }
@@ -191,7 +169,7 @@ textarea:focus-visible {
   display: flex;
   align-items: center;
   gap: 9px;
-  font-size: 12px;
+  font-size: 1rem;
   margin: 12px 0;
   line-height: 1.6;
 }
@@ -201,13 +179,13 @@ textarea:focus-visible {
 }
 .catalog-layer p {
   color: #91a4ae;
-  font-size: 11px;
+  font-size: 0.875rem;
   line-height: 1.8;
 }
 .layer-status {
   display: block;
   color: #c3ae87;
-  font-size: 10px;
+  font-size: 0.875rem;
   line-height: 1.6;
   margin: 7px 0;
   overflow-wrap: anywhere;
@@ -217,7 +195,7 @@ details {
 }
 summary {
   cursor: pointer;
-  font-size: 13px;
+  font-size: 1rem;
 }
 .point-row {
   display: flex;
@@ -225,23 +203,23 @@ summary {
   gap: 9px;
   padding: 13px 0;
   border-bottom: 1px solid #253039;
-  font-size: 11px;
+  font-size: 0.875rem;
 }
 .point-title {
   flex: 1;
   text-align: left;
   line-height: 1.7;
-  font-size: 12px;
+  font-size: 1rem;
 }
 .point-title small {
   display: block;
-  color: #80949e;
-  font-size: 10px;
+  color: #a6bac6;
+  font-size: 0.875rem;
 }
 .file-label {
   display: block;
   margin: 12px 0;
-  font-size: 11px;
+  font-size: 0.875rem;
 }
 .file-label input {
   margin-top: 8px;
@@ -258,50 +236,50 @@ summary {
   padding: 10px;
 }
 .resource-editor legend {
-  font-size: 12px;
+  font-size: 1rem;
 }
 .resource-row {
   display: grid;
   grid-template-columns: 1fr 2fr auto;
   gap: 7px;
   margin: 6px 0;
-  font-size: 12px;
+  font-size: 1rem;
 }
 .rich-detail {
-  top: 128px;
-  bottom: 90px;
+  top: 24px;
+  bottom: 24px;
   max-height: none;
   overflow-y: auto;
-  width: 340px;
+  width: min(400px, calc(100% - 40px));
 }
 .rich-detail h4 {
-  font-size: 12px;
+  font-size: 1rem;
   margin: 22px 0 10px;
   color: #c4d9d2;
 }
 .rich-detail figure {
   margin: 10px 0;
 }
-.rich-detail img {
+.rich-detail figure > img {
   width: 100%;
   border-radius: 5px;
 }
 .rich-detail figcaption {
-  font-size: 10px;
+  font-size: 0.875rem;
   line-height: 1.6;
   color: #91a4ae;
 }
 .rich-detail a {
   display: block;
-  font-size: 11px;
+  font-size: 0.875rem;
   margin: 9px 0;
 }
 .rich-detail .empty-resource {
-  font-size: 11px;
-  color: #7c929e;
+  font-size: 0.875rem;
+  color: #a6bac6;
 }
 .model-preview {
-  height: 230px;
+  height: 280px;
   position: relative;
   margin-top: 10px;
 }
@@ -314,7 +292,7 @@ summary {
   position: absolute;
   left: 12px;
   bottom: 8px;
-  font-size: 10px;
+  font-size: 0.875rem;
   margin: 0;
   pointer-events: none;
 }
@@ -328,12 +306,12 @@ summary {
 }
 .navigation-card strong {
   display: block;
-  font-size: 13px;
+  font-size: 1.125rem;
   margin-bottom: 8px;
 }
 .navigation-card small {
   color: #9eb0bb;
-  font-size: 11px;
+  font-size: 0.875rem;
   line-height: 1.8;
 }
 .navigation-card.active {
@@ -351,7 +329,7 @@ summary {
   background: #0a141ee8;
   padding: 15px;
   border-radius: 7px;
-  font-size: 12px;
+  font-size: 1rem;
   z-index: 2;
 }
 .roaming-help span {
@@ -364,80 +342,112 @@ summary {
 .scene-message {
   z-index: 10;
 }
+
+.compact-row {
+  flex-wrap: wrap;
+}
+.parameter-layer > .compact-row {
+  flex-wrap: nowrap;
+}
+.parameter-slider .field {
+  gap: 14px;
+}
+.parameter-slider .field input {
+  flex-shrink: 0;
+}
+.parameter-layer {
+  background: #182c38;
+  border: 1px solid #344c58;
+  border-radius: 10px;
+  padding: 16px;
+  margin: 16px 0;
+}
+.parameter-panel > .secondary-button {
+  width: 100%;
+}
+input[type="range"] {
+  min-height: 28px;
+}
+input[type="number"] {
+  font-variant-numeric: tabular-nums;
+}
+.point-row > button:last-child {
+  min-height: 40px;
+  padding: 8px;
+  background: #1d3441;
+  border-radius: 5px;
+}
+.tree-leaf .checkbox-row {
+  min-height: 44px;
+}
+.tree-group-heading {
+  margin-top: 12px;
+}
+.tree-group-heading button {
+  min-height: 46px;
+}
+.tree-layer-settings .compact-row button {
+  min-width: 34px;
+  min-height: 36px;
+}
+.catalog-import {
+  padding: 12px;
+  border: 1px solid #344d59;
+  border-radius: 7px;
+  margin: 10px 0 18px;
+}
+.navigation-card {
+  background: #172d38;
+  padding: 18px;
+}
+.navigation-card:hover {
+  border-color: #759a91;
+}
+.resource-row input {
+  font-size: 0.9375rem;
+}
+.rich-detail h4 {
+  font-size: 1.125rem;
+}
+.rich-detail a {
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.roaming-help {
+  bottom: 30px;
+  left: 20px;
+  right: 20px;
+  flex-wrap: wrap;
+  font-size: 0.9375rem;
+  border: 1px solid #48616a;
+}
+.roaming-help button {
+  padding: 8px 12px;
+  border: 1px solid #9b855e;
+  border-radius: 6px;
+}
 @media (max-width: 1100px) {
-  .app-header {
-    padding: 0 18px;
-    gap: 12px;
-  }
-  .brand-subtitle {
-    display: none;
-  }
-  .left-panel {
-    width: 290px;
-    flex-basis: 290px;
+  .roaming-help span {
+    flex-basis: 100%;
+    order: 3;
   }
   .rich-detail {
-    width: 290px;
-  }
-  .scene-tag {
-    display: none;
+    right: 12px;
+    width: calc(100% - 24px);
   }
 }
 @media (max-width: 760px) {
-  .app-header nav button:last-child,
-  .header-actions {
-    display: flex;
+  .resource-row {
+    grid-template-columns: 1fr;
   }
-  .app-header {
-    height: auto;
-    min-height: 100px;
-    flex-wrap: wrap;
-    padding: 14px;
-  }
-  .app-header nav {
-    order: 3;
-    width: 100%;
-    justify-content: space-between;
-    gap: 5px;
-  }
-  .app-header nav button {
-    padding: 8px;
-    font-size: 12px;
-  }
-  .workspace {
-    display: flex;
-    flex-direction: column;
-  }
-  .left-panel {
-    width: 100%;
-    max-height: 400px;
-    flex-basis: auto;
-    padding: 22px;
-  }
-  .scene-stage {
-    min-height: 600px;
+  .resource-row button {
+    justify-self: end;
   }
   .rich-detail {
-    top: 100px;
-    bottom: 70px;
-    right: 15px;
-    width: min(320px, calc(100% - 30px));
+    top: 16px;
+    bottom: 24px;
   }
-  .timeline-panel {
-    overflow-x: auto;
-  }
-  .timeline-track {
-    min-width: 500px;
-  }
-  .timeline-label {
-    display: none;
-  }
-  .roaming-help {
-    left: 10px;
-    right: 10px;
-    flex-wrap: wrap;
-  }
-  .roaming-help span {
-    flex-basis: 100%;
+  .modal {
+    padding: 22px;
   }
 }
