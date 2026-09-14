@@ -1,0 +1,19 @@
+# Local source material and development tools
+/tmp/
+/UE5_Cesium_PixelStreaming_Moon_Web_Demo_Implementation_Plan.md
+/月球可视化/
+/*.pdf
+/*.7z
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.pyc
+test-results/
+playwright-report/
+*.log
+moon-web/data/raw/
+moon-web/data/derived/

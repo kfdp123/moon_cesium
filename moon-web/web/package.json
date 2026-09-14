@@ -1,0 +1,35 @@
+{
+  "name": "moon-cesium",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "vitest run",
+    "format": "prettier --write src vite.config.ts tsconfig.json package.json index.html",
+    "format:check": "prettier --check src vite.config.ts tsconfig.json package.json index.html"
+  },
+  "dependencies": {
+    "@lucide/vue": "1.46.0",
+    "cesium": "1.132.0",
+    "pinia": "3.0.4",
+    "vue": "3.5.42"
+  },
+  "overrides": {
+    "@cesium/engine": "19.0.0",
+    "@cesium/widgets": "13.0.0",
+    "@zip.js/zip.js": "2.7.70"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.30",
+    "@vitejs/plugin-vue": "5.2.4",
+    "prettier": "3.5.3",
+    "typescript": "5.9.3",
+    "vite": "6.4.3",
+    "vite-plugin-static-copy": "2.3.2",
+    "vitest": "4.1.11",
+    "vue-tsc": "3.1.0"
+  }
+}
