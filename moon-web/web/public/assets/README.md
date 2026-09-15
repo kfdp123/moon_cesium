@@ -23,3 +23,12 @@
 高程网格参考球半径为 1737400 m，行从北向南、列从 -180° 向东，像元中心约定。此次高程范围 -8878 至 10504 m，0.25° 分辨率适合概览，不是合同最终高分辨率地形。转换取整误差不超过 0.5 m。
 
 在线 WMTS 图层地址、矩阵与来源见 `src/data/mapLayers.ts` 和项目 `docs/V0.2扩展实施与数据说明.md`。原始第三方资料需保留对应署名；模型和图像不表示 NASA 对本应用的认可。
+
+## 地球全球影像（V0.5 新增）
+
+- 文件：`earth-blue-marble-200409.jpg`，原始 JPEG，5400 × 2700，1,709,729 字节；未裁剪或重采样。
+- 来源：NASA Earth Observatory，Blue Marble: Next Generation，2004 年 9 月无云地表合成图。NASA image courtesy Reto Stöckli and Robert Simmon。
+- 说明页：https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/base-map/
+- 原始文件：https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-base/september/world.200409.3x5400x2700.jpg
+- SHA-256：`ed72e87674861f72e2a6e5df52f0cc6bf3df1edd9b862664cf18ac423e2e9e0e`
+- 用途：WGS84 地球椭球表面颜色，不是当前时间轴日期的实时观测。与本地静态资源一同发布；保留 NASA 来源，不暗示 NASA 对应用背书。

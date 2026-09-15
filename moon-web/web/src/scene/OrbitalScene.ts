@@ -5,6 +5,8 @@ import {
   ClockViewModel,
   Color,
   DirectionalLight,
+  DynamicAtmosphereLightingType,
+  Ellipsoid,
   EllipsoidGeometry,
   GeometryInstance,
   HeadingPitchRange,
@@ -16,12 +18,14 @@ import {
   Matrix4,
   PolylineCollection,
   Primitive,
-  Transforms,
+  SkyAtmosphere,
+  Credit,
   Viewer,
 } from "cesium";
 import { SURFACE_TEXTURE_URL } from "../data/moon";
 import { lunarEphemeris } from "./lunarEphemeris";
 import { sunTextureFragment } from "./sunAppearance";
+import { earthMaterial, earthToInertial, EARTH_IMAGE_CREDIT } from "./earth";
 
 /** Earth-centered inertial overview; no globe or global transform overrides. */
 export class OrbitalScene {
@@ -39,9 +43,11 @@ export class OrbitalScene {
     container: HTMLElement,
     clock: Clock,
     reportError: (message: string) => void,
+    earthImage: HTMLImageElement | ImageBitmap,
   ) {
     this.clockModel = new ClockViewModel(clock);
     this.viewer = new Viewer(container, {
+      ellipsoid: Ellipsoid.WGS84,
       clockViewModel: this.clockModel,
       globe: false,
       baseLayer: false,
@@ -57,7 +63,7 @@ export class OrbitalScene {
       selectionIndicator: false,
       fullscreenButton: false,
       skyBox: false,
-      skyAtmosphere: false,
+      skyAtmosphere: new SkyAtmosphere(Ellipsoid.WGS84),
       requestRenderMode: true,
       maximumRenderTimeChange: Infinity,
       contextOptions: { webgl: { preserveDrawingBuffer: true } },
@@ -72,18 +78,15 @@ export class OrbitalScene {
       reportError(String(cause)),
     );
     this.viewer.scene.screenSpaceCameraController.maximumZoomDistance = 4e9;
-    this.earth = this.sphere(
-      6378137,
-      Material.fromType("Color", {
-        color: Color.fromCssColorString("#397cad"),
-      }),
-    );
+    this.viewer.scene.screenSpaceCameraController.minimumZoomDistance = 7e6;
+    this.viewer.creditDisplay.addStaticCredit(new Credit(EARTH_IMAGE_CREDIT));
+    this.earth = this.sphere(Ellipsoid.WGS84.radii, earthMaterial(earthImage));
     this.moon = this.sphere(
-      1737400,
+      new Cartesian3(1737400, 1737400, 1737400),
       Material.fromType("Image", { image: SURFACE_TEXTURE_URL }),
     );
     this.labels = this.viewer.scene.primitives.add(new LabelCollection());
-    for (const text of ["地球（示意）", "月球", "太阳方向", "0° 经线参考点"])
+    for (const text of ["地球", "月球", "太阳方向", "0° 经线参考点"])
       this.labels.add({
         text,
         position: Cartesian3.ZERO,
@@ -112,13 +115,13 @@ export class OrbitalScene {
     this.configure(false, true);
     this.reset();
   }
-  private sphere(radius: number, material: Material) {
+  private sphere(radii: Cartesian3, material: Material) {
     return this.viewer.scene.primitives.add(
       new Primitive({
         geometryInstances: new GeometryInstance({
           geometry: EllipsoidGeometry.createGeometry(
             new EllipsoidGeometry({
-              radii: new Cartesian3(radius, radius, radius),
+              radii,
               vertexFormat:
                 MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
               stackPartitions: 64,
@@ -131,9 +134,13 @@ export class OrbitalScene {
       }),
     );
   }
-  configure(trueScale: boolean, lighting: boolean) {
+  configure(trueScale: boolean, lighting: boolean, atmosphere = true) {
     const scaleChanged = this.trueScale !== trueScale;
     this.trueScale = trueScale;
+    this.viewer.scene.skyAtmosphere!.show = atmosphere;
+    this.viewer.scene.atmosphere.dynamicLighting = lighting
+      ? DynamicAtmosphereLightingType.SCENE_LIGHT
+      : DynamicAtmosphereLightingType.NONE;
     for (const body of [this.earth, this.moon])
       body.appearance = new MaterialAppearance({
         material: (body.appearance as MaterialAppearance).material,
@@ -162,12 +169,8 @@ export class OrbitalScene {
       moonScale,
       new Matrix4(),
     );
-    // Earth orientation is only a visual reference, not an ITRF precision product.
     this.earth.modelMatrix = Matrix4.fromRotationTranslation(
-      Matrix3.transpose(
-        Transforms.computeTemeToPseudoFixedMatrix(time),
-        new Matrix3(),
-      ),
+      earthToInertial(time),
     );
     (this.viewer.scene.light as DirectionalLight).direction =
       Cartesian3.normalize(
@@ -222,6 +225,36 @@ export class OrbitalScene {
       new HeadingPitchRange(0, -0.75, this.trueScale ? 1.3e9 : 1.65e8),
     );
     this.viewer.camera.lookAtTransform(Matrix4.IDENTITY);
+    this.viewer.scene.requestRender();
+  }
+  focusEarth() {
+    const sun = lunarEphemeris(this.viewer.clock.currentTime).sun;
+    // A sunward, slightly oblique approach exposes continents and the day/night edge.
+    const direction = Matrix3.multiplyByVector(
+      Matrix3.fromRotationZ(0.45),
+      Cartesian3.normalize(sun, new Cartesian3()),
+      new Cartesian3(),
+    );
+    direction.z += 0.2;
+    Cartesian3.normalize(direction, direction);
+    const destination = Cartesian3.multiplyByScalar(
+      direction,
+      2.25e7,
+      new Cartesian3(),
+    );
+    const look = Cartesian3.negate(direction, new Cartesian3());
+    const right = Cartesian3.normalize(
+      Cartesian3.cross(look, Cartesian3.UNIT_Z, new Cartesian3()),
+      new Cartesian3(),
+    );
+    this.viewer.camera.flyTo({
+      destination,
+      orientation: {
+        direction: look,
+        up: Cartesian3.cross(right, look, new Cartesian3()),
+      },
+      duration: 0.8,
+    });
     this.viewer.scene.requestRender();
   }
   zoom(direction: "in" | "out") {

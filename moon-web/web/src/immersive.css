@@ -95,6 +95,23 @@
 .scene-caption strong {
   font-size: 1.125rem;
 }
+.earth-view-actions {
+  position: absolute;
+  top: calc(var(--header-bottom) + 64px);
+  left: var(--edge);
+  display: flex;
+  gap: 8px;
+}
+.earth-view-actions .secondary-button {
+  background: var(--glass);
+  font-size: 0.875rem;
+  margin: 0;
+}
+@media (max-width: 760px) {
+  .immersive-app:has(.floating-panel) .earth-view-actions {
+    display: none;
+  }
+}
 .scene-caption span {
   font-size: 0.875rem;
   color: #b5c7cd;

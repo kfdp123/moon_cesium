@@ -8,6 +8,7 @@
 | Vue、Pinia | 页面与状态 | MIT，https://github.com/vuejs/core ，https://github.com/vuejs/pinia |
 | Lucide | 界面图标 | ISC，https://github.com/lucide-icons/lucide |
 | NASA SVS CGI Moon Kit | 月表展示纹理 | https://svs.gsfc.nasa.gov/4720/ ，按来源要求保留 NASA SVS 署名 |
+| NASA Earth Observatory / Reto Stöckli、Robert Simmon | Blue Marble 2004-09 全球地表影像 | https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/base-map/ ，保留 NASA 及原作者署名 |
 | NASA / LOLA | 实际高程数据 | https://svs.gsfc.nasa.gov/4720/ ，数据来源 LRO/LOLA 团队 |
 | NASA Trek | 在线影像与专题图 | https://trek.nasa.gov/tiles/apidoc/trekAPI.html?body=moon ，保留图层来源 |
 | USGS / IAU 地名目录 | 地貌中心点 | https://planetarynames.wr.usgs.gov/GIS_Downloads ，保留每条记录链接 |

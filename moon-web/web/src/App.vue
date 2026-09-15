@@ -313,7 +313,7 @@ async function downloadImage() {
     );
     context.fillText(
       astronomy.view === "system"
-        ? "月球影像：NASA LRO 展示贴图 · 天体运动：Cesium 解析近似 · 地球：示意球"
+        ? "月球影像：NASA LRO · 地球影像：NASA Blue Marble 2004-09 · 运动/大气：模拟"
         : `现今月表来源：${catalog.mapLayers
             .filter((l) => l.visible)
             .map((l) => l.name)
@@ -419,6 +419,22 @@ onBeforeUnmount(() => {
     <div class="scene-caption">
       <strong>{{ sceneName }}</strong
       ><span>{{ sceneNote }}</span>
+    </div>
+    <div v-if="sceneMode === 'system'" class="earth-view-actions">
+      <button
+        class="secondary-button"
+        :disabled="!ready"
+        @click="orbitalViewport?.focusEarth()"
+      >
+        聚焦地球
+      </button>
+      <button
+        class="secondary-button"
+        :disabled="!ready"
+        @click="orbitalViewport?.reset()"
+      >
+        返回地月全景
+      </button>
     </div>
     <nav class="floating-tools" aria-label="场景工具">
       <button
@@ -621,7 +637,9 @@ onBeforeUnmount(() => {
         ready ? "场景已就绪" : "正在准备场景"
       }}
     </div>
-    <div class="source-credit">NASA / USGS · 现今数据与教学示意分开标注</div>
+    <div v-if="sceneMode !== 'system'" class="source-credit">
+      NASA / USGS · 现今数据与教学示意分开标注
+    </div>
     <div
       v-if="aboutOpen"
       class="modal-backdrop"
