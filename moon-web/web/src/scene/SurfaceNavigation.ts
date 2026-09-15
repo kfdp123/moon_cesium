@@ -254,7 +254,7 @@ export class SurfaceNavigation {
       dt = Math.min(0.05, (now - this.lastTime) / 1000);
     this.lastTime = now;
     if (this.rover) {
-      this.rover.tick(dt);
+      this.rover.tick(dt, this.keys);
       return;
     }
     let eye: Cartesian3, direction: Cartesian3;

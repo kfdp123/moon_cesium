@@ -38,5 +38,10 @@ const rover = useRover();
       循环示意轨迹</span
     >
     <span class="panel-note" role="status">{{ rover.status }}</span>
+    <span class="panel-note">{{
+      rover.view === "free"
+        ? "鼠标拖动观察 · 滚轮缩放"
+        : "点击月面后，方向键或 WASD 上下左右转头；鼠标拖拽已禁用。切换视角可回正。"
+    }}</span>
   </div>
 </template>

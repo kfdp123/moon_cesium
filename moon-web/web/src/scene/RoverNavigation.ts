@@ -19,6 +19,8 @@ export class RoverNavigation {
   private disposed = false;
   private lastView = "";
   private lastRestart = 0;
+  private lookYaw = 0;
+  private lookPitch = 0;
   private controls = useRover();
   constructor(
     private viewer: Viewer,
@@ -68,8 +70,22 @@ export class RoverNavigation {
       }
     }
   }
-  tick(dt: number) {
+  tick(dt: number, keys: ReadonlySet<string>) {
     const c = this.controls;
+    if (c.view !== this.lastView) {
+      this.lookYaw = 0;
+      this.lookPitch = 0;
+    }
+    if (c.view !== "free") {
+      const right =
+        Number(keys.has("ArrowRight") || keys.has("KeyD")) -
+        Number(keys.has("ArrowLeft") || keys.has("KeyA"));
+      const up =
+        Number(keys.has("ArrowUp") || keys.has("KeyW")) -
+        Number(keys.has("ArrowDown") || keys.has("KeyS"));
+      this.lookYaw += right * dt;
+      this.lookPitch = Math.max(-0.9, Math.min(0.9, this.lookPitch + up * dt));
+    }
     if (c.restart !== this.lastRestart) {
       c.distance = 0;
       this.lastRestart = c.restart;
@@ -123,6 +139,11 @@ export class RoverNavigation {
           ),
         },
       });
+    }
+    // Reapply look offsets after the vehicle-relative camera pose each frame.
+    if (c.view !== "free") {
+      camera.lookRight(this.lookYaw);
+      camera.lookUp(this.lookPitch);
     }
     this.lastView = c.view;
     this.viewer.scene.requestRender();
