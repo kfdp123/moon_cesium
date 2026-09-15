@@ -34,12 +34,14 @@ test("canvas fills the window and floating tools never resize it", async ({
   });
   await page.getByRole("button", { name: "内部与演化", exact: true }).click();
   await page.locator(".timeline-track button").nth(1).click();
+  await page.getByRole("button", { name: "参数模型", exact: true }).click();
   await page.getByLabel("总半径", { exact: true }).fill("1800");
   await page.getByLabel("总半径", { exact: true }).press("Tab");
   await page.getByRole("button", { name: "月球探索", exact: true }).click();
   await expect(page.locator(".floating-panel")).toHaveCount(0);
   await expect(page.locator(".timeline-track")).toHaveCount(0);
   await page.getByRole("button", { name: "内部与演化", exact: true }).click();
+  await page.getByRole("button", { name: "参数模型", exact: true }).click();
   await expect(page.getByLabel("总半径", { exact: true })).toHaveValue(
     "1800.0",
   );

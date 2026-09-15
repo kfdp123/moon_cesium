@@ -32,6 +32,9 @@ import PointPanel from "./components/PointPanel.vue";
 import PointDetails from "./components/PointDetails.vue";
 import AstronomyPanel from "./components/AstronomyPanel.vue";
 import RoverControls from "./components/RoverControls.vue";
+import InteriorControls from "./components/InteriorControls.vue";
+import EvolutionTour from "./components/EvolutionTour.vue";
+import { useEvolutionTour } from "./stores/evolutionTour";
 import AstroTimeline from "./components/AstroTimeline.vue";
 import OrbitalViewport from "./components/OrbitalViewport.vue";
 import { useAstronomy } from "./stores/astronomy";
@@ -42,6 +45,7 @@ import type { CutawayMode, NavigationMode } from "./types";
 const explorer = useExplorer();
 const catalog = useCatalog();
 const astronomy = useAstronomy();
+const tour = useEvolutionTour();
 const viewport = ref<InstanceType<typeof MoonViewport>>();
 const orbitalViewport = ref<InstanceType<typeof OrbitalViewport>>();
 const activeViewport = computed(() =>
@@ -52,7 +56,7 @@ type Tool = "parameters" | "maps" | "points" | "scenes" | "astronomy";
 const sceneMode = ref<SceneMode>("explore");
 const tab = ref<Tool | null>(null);
 const ready = ref(false);
-const playing = ref(false);
+const playing = computed(() => tour.playing);
 const aboutOpen = ref(false);
 const notice = ref("");
 const navigation = ref<NavigationMode>("orbit");
@@ -61,7 +65,7 @@ const timeExpanded = ref(false);
 const helpOpen = ref(false);
 let shownRoamingHelp = false;
 let interiorEpoch = 3;
-let interiorCut: CutawayMode = "half";
+let interiorCut: CutawayMode = "quarter";
 const workspaces = [
   { id: "explore", label: "月球探索", icon: Moon },
   { id: "interior", label: "内部与演化", icon: Layers },
@@ -113,6 +117,7 @@ watch(
   },
 );
 function openTool(tool: Tool) {
+  if (sceneMode.value === "interior") tour.pause();
   closeDetails();
   tab.value = tab.value === tool ? null : tool;
 }
@@ -122,6 +127,8 @@ function pauseDate() {
 }
 function selectWorkspace(value: SceneMode) {
   if (sceneMode.value === value) return;
+  const leavingInterior = sceneMode.value === "interior";
+  tour.stop();
   if (sceneMode.value === "interior") {
     interiorEpoch = explorer.epochIndex;
     interiorCut = explorer.cutaway;
@@ -135,17 +142,22 @@ function selectWorkspace(value: SceneMode) {
   if (astronomy.view !== view) ready.value = false;
   astronomy.view = view;
   sceneMode.value = value;
+  explorer.exhibitEnabled = value === "interior";
+  explorer.expanded = false;
   timeExpanded.value = value === "system";
   helpOpen.value = false;
   if (value === "interior") {
+    explorer.evolutionRunning = true;
     pauseDate();
     astronomy.lighting = false;
     explorer.setEpoch(interiorEpoch);
     explorer.cutaway = interiorCut;
-    tab.value = "parameters";
+    void nextTick(() => viewport.value?.reset());
   } else {
     if (explorer.epochIndex !== 3) explorer.setEpoch(3);
     explorer.cutaway = "full";
+    if (leavingInterior && value !== "system")
+      void nextTick(() => viewport.value?.reset());
     if (value === "roam") {
       pauseDate();
       tab.value = "scenes";
@@ -189,12 +201,18 @@ const sceneModes: { id: NavigationMode; name: string; description: string }[] =
       description: "跟随宇航员探索月表，可自由走离基地，方向键调节视角。",
     },
   ];
-let timer: ReturnType<typeof setInterval> | undefined;
 let noticeTimer: ReturnType<typeof setTimeout> | undefined;
 function pause() {
-  clearInterval(timer);
-  playing.value = false;
+  tour.pause();
 }
+watch(
+  () => tour.command,
+  async () => {
+    tab.value = null;
+    await nextTick();
+    if (tour.active && !explorer.selectedLayer) viewport.value?.reset();
+  },
+);
 function toast(text: string) {
   notice.value = text;
   clearTimeout(noticeTimer);
@@ -205,6 +223,7 @@ function stopNavigation() {
   navigation.value = "orbit";
 }
 function selectEpoch(index: number) {
+  tour.stop();
   explorer.rememberModel();
   astronomy.clock.shouldAnimate = false;
   astronomy.command++;
@@ -212,6 +231,7 @@ function selectEpoch(index: number) {
   pause();
   stopNavigation();
   explorer.setEpoch(index);
+  explorer.evolutionRunning = true;
   viewport.value?.reset();
 }
 async function selectCut(cut: CutawayMode) {
@@ -267,14 +287,7 @@ function playback() {
   astronomy.command++;
   astronomy.lighting = false;
   stopNavigation();
-  explorer.cutaway = "quarter";
-  if (explorer.epochIndex === 3) explorer.setEpoch(0);
-  viewport.value?.reset();
-  playing.value = true;
-  timer = setInterval(() => {
-    if (explorer.epochIndex === 3) pause();
-    else explorer.setEpoch(explorer.epochIndex + 1);
-  }, 7000);
+  tour.resume();
 }
 async function fullscreen() {
   try {
@@ -411,6 +424,11 @@ onBeforeUnmount(() => {
         </button>
       </div>
     </header>
+    <InteriorControls
+      v-if="sceneMode === 'interior'"
+      @overview="viewport?.reset()"
+    />
+    <EvolutionTour v-if="sceneMode === 'interior'" />
     <div v-if="sceneMode === 'system'" class="earth-view-actions">
       <button
         class="secondary-button"
@@ -608,7 +626,7 @@ onBeforeUnmount(() => {
           <Pause v-if="playing" :size="19" /><Play v-else :size="19" />
         </button>
         <div class="timeline-label">
-          <strong>演化场景</strong><small>切换会载入该阶段参数</small>
+          <strong>演化场景</strong><small>播放分步讲解</small>
         </div>
         <div class="timeline-track">
           <button

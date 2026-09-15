@@ -5,6 +5,9 @@ import type { CutawayMode, LayerId, MoonLayer, SceneState } from "../types";
 
 export const useExplorer = defineStore("explorer", () => {
   const cutaway = ref<CutawayMode>("full");
+  const exhibitEnabled = ref(false);
+  const expanded = ref(false);
+  const evolutionRunning = ref(true);
   const epochIndex = ref(3);
   const savedModels = ref<Record<string, MoonLayer[]>>({});
   const drafts: Record<string, MoonLayer[]> = {};
@@ -30,6 +33,13 @@ export const useExplorer = defineStore("explorer", () => {
     selectedLayer: selectedLayer.value,
     showGrid: showGrid.value,
     showLandmarks: showLandmarks.value,
+    exhibit: exhibitEnabled.value
+      ? {
+          expanded: expanded.value,
+          epoch: epochIndex.value,
+          animate: evolutionRunning.value,
+        }
+      : undefined,
   }));
 
   function setEpoch(index: number) {
@@ -158,6 +168,9 @@ export const useExplorer = defineStore("explorer", () => {
     restoreModel,
     loadModels,
     cutaway,
+    exhibitEnabled,
+    expanded,
+    evolutionRunning,
     epochIndex,
     epoch,
     layers,

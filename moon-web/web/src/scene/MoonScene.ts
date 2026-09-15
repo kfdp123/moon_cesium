@@ -16,7 +16,6 @@ import {
   GeometryInstance,
   Globe,
   Matrix4,
-  PerInstanceColorAppearance,
   Primitive,
   PrimitiveCollection,
   PrimitiveType,
@@ -38,6 +37,9 @@ import { buildShell, type ShellMesh } from "./shellGeometry";
 import { MapLayers } from "./MapLayers";
 import { SurfaceNavigation } from "./SurfaceNavigation";
 import { LunarLighting, type LightingOptions } from "./LunarLighting";
+import { interiorAppearance } from "./interiorAppearance";
+import { InteriorExhibit } from "./InteriorExhibit";
+import { LunarEvolution } from "./LunarEvolution";
 
 function geometry(mesh: ShellMesh): Geometry {
   const attributes = new GeometryAttributes();
@@ -76,6 +78,8 @@ export class MoonScene {
   private maps: MapLayer[] = [];
   private readonly layerPrimitives = new Map<string, Primitive[]>();
   private readonly overlayIds: string[] = [];
+  private readonly exhibit: InteriorExhibit;
+  private readonly evolution: LunarEvolution;
 
   constructor(
     container: HTMLElement,
@@ -125,6 +129,8 @@ export class MoonScene {
     this.mapLayers = new MapLayers(this.viewer, reportLayer);
     this.navigation = new SurfaceNavigation(this.viewer);
     this.lighting = new LunarLighting(this.viewer);
+    this.exhibit = new InteriorExhibit(this.viewer, this.layerPrimitives);
+    this.evolution = new LunarEvolution(this.viewer, this.layerPrimitives);
     this.viewer.screenSpaceEventHandler.removeInputAction(
       ScreenSpaceEventType.LEFT_DOUBLE_CLICK,
     );
@@ -174,9 +180,12 @@ export class MoonScene {
       );
       this.configureGlobe();
       void this.applyMaps(this.maps, true);
-      this.resetCamera(false);
     }
-    const key = JSON.stringify([state.cutaway, state.layers]);
+    const key = JSON.stringify([
+      state.cutaway,
+      state.layers,
+      Boolean(state.exhibit && state.exhibit.epoch < 3),
+    ]);
     if (key !== this.geometryKey) {
       this.buildInterior(state);
       const planes =
@@ -199,6 +208,7 @@ export class MoonScene {
         primitive.show = !state.hiddenLayers.includes(id);
     }
     const overlaysKey = JSON.stringify([
+      Boolean(state.exhibit),
       state.radiusKm,
       state.cutaway,
       state.showGrid,
@@ -210,12 +220,19 @@ export class MoonScene {
       this.addOverlays(state);
       this.overlaysKey = overlaysKey;
     }
+    this.exhibit.configure(state);
+    this.evolution.configure(state);
+    if (radiusChanged) this.resetCamera(false);
     this.viewer.scene.requestRender();
   }
 
   resetCamera(animate = true) {
     if (this.lighting) this.lighting.roaming = false;
     this.navigation?.setMode("orbit");
+    if (this.state?.exhibit) {
+      this.exhibit.overview(animate);
+      return;
+    }
     const longitude = this.state?.cutaway === "full" ? 0 : 35;
     const destination = Cartesian3.fromDegrees(
       longitude,
@@ -281,6 +298,8 @@ export class MoonScene {
     this.navigation.inspectBase();
   }
   dispose() {
+    this.exhibit.dispose();
+    this.evolution.dispose();
     this.lighting.dispose();
     this.navigation.dispose();
     this.mapLayers.dispose();
@@ -298,7 +317,7 @@ export class MoonScene {
         layer.outerRadiusKm / state.radiusKm,
         state.cutaway,
         96,
-        index !== 0,
+        index !== 0 || Boolean(state.exhibit && state.exhibit.epoch < 3),
       );
       const primitives = meshes
         .filter((mesh) => mesh.indices.length > 0)
@@ -320,11 +339,11 @@ export class MoonScene {
                   color: ColorGeometryInstanceAttribute.fromColor(color),
                 },
               }),
-              appearance: new PerInstanceColorAppearance({
-                translucent: false,
-                closed: true,
-                flat: false,
-              }),
+              appearance: interiorAppearance(
+                this.radius,
+                mesh.surface === "cap",
+                layer.id,
+              ),
               asynchronous: false,
               // These are interior objects: the globe's horizon occluder must not discard them.
               cull: false,
@@ -382,7 +401,11 @@ export class MoonScene {
         });
       }
     }
-    if (!state.showLandmarks || state.hiddenLayers.includes(state.layers[0].id))
+    if (
+      state.exhibit ||
+      !state.showLandmarks ||
+      state.hiddenLayers.includes(state.layers[0].id)
+    )
       return;
     for (const place of state.points) {
       if (!place.visible || !this.retained(place.longitude, place.latitude))

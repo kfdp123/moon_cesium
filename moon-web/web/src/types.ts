@@ -37,6 +37,7 @@ export interface SceneState {
   showGrid: boolean;
   showLandmarks: boolean;
   points: LunarPoint[];
+  exhibit?: { expanded: boolean; epoch: number; animate: boolean };
 }
 
 export interface ResourceLink {
