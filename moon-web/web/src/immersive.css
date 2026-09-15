@@ -271,6 +271,37 @@
   flex: 1 0 100%;
   font-size: 1rem;
 }
+.rover-controls {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.roaming-strip .rover-controls button {
+  border: 1px solid #45645e;
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 0.875rem;
+}
+.rover-controls .panel-note {
+  margin: 0;
+  padding: 0;
+}
+.roaming-strip:has(.rover-controls) {
+  max-height: calc(100% - var(--header-bottom) - 165px);
+  overflow-y: auto;
+}
+.rover-controls button[aria-pressed="true"] {
+  background: #2d5148;
+  color: #e1fff1;
+}
+.rover-controls .field {
+  margin: 0;
+  font-size: 0.875rem;
+}
+.rover-controls input {
+  width: 100%;
+}
 .roaming-strip button {
   color: #bbdfd0;
   padding: 5px 0;

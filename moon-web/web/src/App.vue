@@ -31,6 +31,7 @@ import MapPanel from "./components/MapPanel.vue";
 import PointPanel from "./components/PointPanel.vue";
 import PointDetails from "./components/PointDetails.vue";
 import AstronomyPanel from "./components/AstronomyPanel.vue";
+import RoverControls from "./components/RoverControls.vue";
 import AstroTimeline from "./components/AstroTimeline.vue";
 import OrbitalViewport from "./components/OrbitalViewport.vue";
 import { useAstronomy } from "./stores/astronomy";
@@ -173,6 +174,11 @@ const cuts: { id: CutawayMode; label: string }[] = [
 ];
 const sceneModes: { id: NavigationMode; name: string; description: string }[] =
   [
+    {
+      id: "rover",
+      name: "月球车轨迹行驶",
+      description: "沿月面示意路线自动行驶，支持自由、固定跟随和车载第一视角。",
+    },
     {
       id: "orbit",
       name: "自由观察",
@@ -589,14 +595,15 @@ onBeforeUnmount(() => {
 
     <div v-if="sceneMode === 'roam'" class="roaming-strip">
       <strong>{{ sceneModes.find((s) => s.id === navigation)?.name }}</strong>
-      <button @click="helpOpen = !helpOpen">
+      <RoverControls v-if="navigation === 'rover'" />
+      <button v-else @click="helpOpen = !helpOpen">
         {{ helpOpen ? "收起操作说明" : "操作说明" }}
       </button>
       <button v-if="navigation !== 'orbit'" @click="stopNavigation">
         退出漫游
       </button>
       <button v-else @click="openTool('scenes')">选择漫游方式</button>
-      <p v-if="helpOpen">
+      <p v-if="helpOpen && navigation !== 'rover'">
         点击月面后 WASD 移动 · 方向键转头 · Shift
         加速。输入框获得焦点时不会触发步行。
       </p>

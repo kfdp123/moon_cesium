@@ -4,6 +4,7 @@ export type NavigationMode =
   | "orbit"
   | "first-person"
   | "base-tour"
+  | "rover"
   | "third-person";
 
 export interface MoonLayer {

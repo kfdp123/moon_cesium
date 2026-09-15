@@ -17,6 +17,7 @@ import type { NavigationMode } from "../types";
 import { terrainHeightAt } from "./lunarTerrain";
 import { regolithMaterial } from "./regolithMaterial";
 import { sunColorFragment } from "./sunAppearance";
+import { RoverNavigation } from "./RoverNavigation";
 
 /** Walk on the lunar globe. Only the base and astronaut are schematic geometry. */
 export class SurfaceNavigation {
@@ -31,6 +32,7 @@ export class SurfaceNavigation {
   private lastTime = performance.now();
   private originalNear = 1;
   private sunlight = false;
+  private rover?: RoverNavigation;
   private returnView?: {
     destination: Cartesian3;
     orientation: { direction: Cartesian3; up: Cartesian3 };
@@ -111,6 +113,10 @@ export class SurfaceNavigation {
     this.heading = -0.48;
     this.pitch = 0.02;
     this.createBase();
+    if (mode === "rover")
+      this.rover = new RoverNavigation(this.viewer, (local) =>
+        this.world(local),
+      );
     this.lastTime = performance.now();
     this.viewer.canvas.focus();
     this.viewer.scene.requestRender();
@@ -247,6 +253,10 @@ export class SurfaceNavigation {
     const now = performance.now(),
       dt = Math.min(0.05, (now - this.lastTime) / 1000);
     this.lastTime = now;
+    if (this.rover) {
+      this.rover.tick(dt);
+      return;
+    }
     let eye: Cartesian3, direction: Cartesian3;
     if (this.mode === "base-tour") {
       this.heading += dt * 0.15;
@@ -329,6 +339,8 @@ export class SurfaceNavigation {
     this.viewer.scene.requestRender();
   }
   private clear() {
+    this.rover?.dispose();
+    this.rover = undefined;
     this.keys.clear();
     this.models.removeAll();
     this.avatar = [];
