@@ -46,7 +46,7 @@ export class RoverNavigation {
   private async load() {
     try {
       const model = await Model.fromGltfAsync({
-        url: "/月球车_居中无背景.glb",
+        url: "/月球车_写实贴图.glb",
         scale: 0.005,
         shadows: ShadowMode.CAST_ONLY,
       });

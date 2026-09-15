@@ -4,6 +4,7 @@
   inset: 0;
   overflow: hidden;
   --edge: 20px;
+  --tool-offset: 86px;
   --header-bottom: 96px;
   --time-space: 104px;
   --glass: #11222deb;
@@ -81,24 +82,10 @@
   display: flex;
   padding: 4px;
 }
-.scene-caption {
-  position: absolute;
-  top: var(--header-bottom);
-  left: var(--edge);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  pointer-events: none;
-  text-shadow: 0 2px 8px #000;
-  color: #e2eee9;
-}
-.scene-caption strong {
-  font-size: 1.125rem;
-}
 .earth-view-actions {
   position: absolute;
   top: calc(var(--header-bottom) + 64px);
-  left: var(--edge);
+  left: calc(var(--edge) + var(--tool-offset));
   display: flex;
   gap: 8px;
 }
@@ -112,14 +99,10 @@
     display: none;
   }
 }
-.scene-caption span {
-  font-size: 0.875rem;
-  color: #b5c7cd;
-}
 .floating-tools {
   position: absolute;
   top: var(--header-bottom);
-  right: var(--edge);
+  left: var(--edge);
   width: 72px;
   padding: 5px;
   display: flex;
@@ -153,7 +136,7 @@
 .floating-detail {
   position: absolute;
   top: var(--header-bottom);
-  right: calc(var(--edge) + 86px);
+  left: calc(var(--edge) + var(--tool-offset));
   bottom: var(--time-space);
   width: min(400px, calc(100% - 118px));
   overflow-y: auto;
@@ -172,6 +155,8 @@
   margin: 0;
 }
 .floating-detail {
+  left: auto;
+  right: var(--edge);
   padding: 22px;
   max-height: none;
   background: var(--glass);
@@ -257,7 +242,7 @@
 }
 .roaming-strip {
   position: absolute;
-  left: var(--edge);
+  left: calc(var(--edge) + var(--tool-offset));
   top: calc(var(--header-bottom) + 64px);
   width: min(400px, calc(100% - 118px));
   padding: 12px 16px;
@@ -349,6 +334,7 @@
 @media (max-width: 760px) {
   .immersive-app {
     --header-bottom: 142px;
+    --tool-offset: 70px;
   }
   .immersive-app.time-expanded {
     --time-space: 245px;
@@ -368,16 +354,12 @@
   }
   .floating-panel,
   .floating-detail {
-    right: 82px;
+    left: 82px;
     width: calc(100% - 94px);
     padding-inline: 14px;
   }
-  .scene-caption {
-    max-width: calc(100% - 94px);
-  }
-  .immersive-app:has(.floating-panel) .scene-caption,
-  .immersive-app:has(.floating-detail) .scene-caption {
-    visibility: hidden;
+  .floating-detail {
+    left: auto;
   }
   .floating-time {
     max-width: calc(100% - 24px);
@@ -404,6 +386,21 @@
   .floating-time .text-button {
     font-size: 0.8125rem;
   }
+}
+
+/* Preserve live announcements without permanent visual status labels. */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.immersive-app:has(.floating-panel) .earth-view-actions {
+  visibility: hidden;
 }
 @media (max-width: 600px) {
   .immersive-app {

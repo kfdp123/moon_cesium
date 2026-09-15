@@ -16,7 +16,7 @@ function apply(action: () => void) {
 
 <template>
   <section class="panel-section parameter-panel">
-    <div class="section-label">模型参数 <small>教学示意</small></div>
+    <div class="section-label">模型参数</div>
     <ParameterSlider
       label="总半径"
       :value="explorer.radiusKm"
@@ -25,9 +25,12 @@ function apply(action: () => void) {
       :step="10"
       @change="(value) => apply(() => explorer.setRadius(value))"
     />
-    <p class="panel-note">
-      拖动滑块、松开更新模型；选中滑块后可用滚轮微调。总半径同比缩放圈层，厚度调整会重算总半径。
-    </p>
+    <details>
+      <summary>参数说明</summary>
+      <p class="panel-note">
+        选中滑块后可用滚轮微调。总半径同比缩放圈层，厚度调整会重算总半径。参数按年代保存在本浏览器。
+      </p>
+    </details>
     <div
       v-for="layer in explorer.layers"
       :key="layer.id"
@@ -96,7 +99,6 @@ function apply(action: () => void) {
     <button class="secondary-button" @click="apply(explorer.saveModel)">
       保存当前年代参数
     </button>
-    <p class="panel-note">保存后，切换年代或刷新将载入该年代的保存参数。</p>
     <button class="text-button" @click="apply(explorer.restoreModel)">
       恢复阶段默认参数
     </button>

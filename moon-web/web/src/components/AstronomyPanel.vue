@@ -75,9 +75,6 @@ function shadowExample() {
       <button class="secondary-button" @click="shadowExample">
         前往基地看阴影
       </button>
-      <p class="panel-note">
-        阴影示例会跳到基地附近的白昼时刻。漫游中镜头随月面固定；退出后可继续观察自转。
-      </p>
     </template>
     <template v-else
       ><label class="checkbox-row"
@@ -92,10 +89,6 @@ function shadowExample() {
           v-model="astronomy.earthAtmosphere"
         />地球大气光晕</label
       >
-      <p class="panel-note">
-        地球采用 WGS84 参考椭球与 NASA Blue Marble 2004 年 9
-        月合成影像。影像不是当前日期的实时观测；大气为视觉模拟。
-      </p>
     </template>
     <dl class="astronomy-facts">
       <div>
@@ -111,12 +104,22 @@ function shadowExample() {
         <dd>{{ info.subsolarLongitude.toFixed(1) }}° E</dd>
       </div>
     </dl>
-    <p class="panel-note">
-      使用 Cesium 的现代日期解析近似。全景默认将距离缩为 1/8、月球放大 3
-      倍；角位置与时间保持一致。太阳以光线方向表示。
-    </p>
-    <p class="panel-note">
-      地质年代与日期时间相互独立。阴影为基地模型向月面投影；未模拟地形自身遮挡、日月食、远古轨道、真实地球云层和月壤散射。
-    </p>
+    <details>
+      <summary>模拟与数据说明</summary>
+      <p v-if="astronomy.view === 'moon'" class="panel-note">
+        阴影示例会跳到基地附近的白昼时刻。漫游中镜头随月面固定；退出后可继续观察自转。
+      </p>
+      <p v-else class="panel-note">
+        地球采用 WGS84 参考椭球与 NASA Blue Marble 2004 年 9
+        月合成影像。影像不是当前日期的实时观测；大气为视觉模拟。
+      </p>
+      <p class="panel-note">
+        使用 Cesium 的现代日期解析近似。全景默认将距离缩为 1/8、月球放大 3
+        倍；角位置与时间保持一致。太阳以光线方向表示。
+      </p>
+      <p class="panel-note">
+        地质年代与日期时间相互独立。阴影为基地模型向月面投影；未模拟地形自身遮挡、日月食、远古轨道、真实地球云层和月壤散射。
+      </p>
+    </details>
   </section>
 </template>

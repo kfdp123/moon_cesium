@@ -37,11 +37,19 @@ const rover = useRover();
       >{{ rover.distance.toFixed(0) }} / {{ ROVER_ROUTE_LENGTH.toFixed(0) }} m ·
       循环示意轨迹</span
     >
-    <span class="panel-note" role="status">{{ rover.status }}</span>
-    <span class="panel-note">{{
-      rover.view === "free"
-        ? "鼠标拖动观察 · 滚轮缩放"
-        : "点击月面后，方向键或 WASD 上下左右转头；鼠标拖拽已禁用。切换视角可回正。"
-    }}</span>
+    <span
+      class="panel-note"
+      :class="{ 'visually-hidden': rover.status === '月球车已就绪' }"
+      role="status"
+      >{{ rover.status }}</span
+    >
+    <details>
+      <summary>操作说明</summary>
+      <span class="panel-note">{{
+        rover.view === "free"
+          ? "鼠标拖动观察 · 滚轮缩放"
+          : "点击月面后，方向键或 WASD 上下左右转头；鼠标拖拽已禁用。切换视角可回正。"
+      }}</span>
+    </details>
   </div>
 </template>

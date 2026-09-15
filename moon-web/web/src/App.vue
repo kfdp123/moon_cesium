@@ -102,17 +102,6 @@ const toolCaption: Record<Tool, string> = {
 const sceneName = computed(
   () => workspaces.find((item) => item.id === sceneMode.value)!.label,
 );
-const sceneNote = computed(() =>
-  sceneMode.value === "system"
-    ? astronomy.trueScale
-      ? "真实大小与距离比例"
-      : "距离 1/8 · 月球大小 3 倍"
-    : sceneMode.value === "interior"
-      ? `${explorer.epoch.label} · 教学示意`
-      : sceneMode.value === "roam"
-        ? "基地与人物为示意"
-        : "现今月表 · 可点击查询",
-);
 function closeDetails() {
   explorer.selectedLayer = null;
   explorer.selectedLandmark = null;
@@ -382,7 +371,7 @@ onBeforeUnmount(() => {
           activeViewport?.reset();
         "
         ><span class="brand-symbol"><Moon :size="22" /></span
-        ><strong>月见</strong></a
+        ><strong>{{ sceneName }}</strong></a
       >
       <nav class="scene-switcher" aria-label="观察场景">
         <button
@@ -422,10 +411,6 @@ onBeforeUnmount(() => {
         </button>
       </div>
     </header>
-    <div class="scene-caption">
-      <strong>{{ sceneName }}</strong
-      ><span>{{ sceneNote }}</span>
-    </div>
     <div v-if="sceneMode === 'system'" class="earth-view-actions">
       <button
         class="secondary-button"
@@ -494,9 +479,6 @@ onBeforeUnmount(() => {
           <X :size="22" />
         </button>
       </div>
-      <p v-if="tab === 'parameters'" class="intro">
-        调整圈层与年代，查看月表和内部。当前参数为教学示意。
-      </p>
       <div
         v-if="tab === 'parameters'"
         class="cutaway-options"
@@ -543,10 +525,13 @@ onBeforeUnmount(() => {
           <strong>{{ mode.name }}</strong
           ><small>{{ mode.description }}</small>
         </button>
-        <p class="panel-note">
-          从 20°W、10°N 附近的开阔月表出发，可走离基地。启用 DEM
-          时随高程行走；近景月壤纹理、基地与人物为示意，全球数据不含米级地貌。
-        </p>
+        <details>
+          <summary>场景说明</summary>
+          <p class="panel-note">
+            从 20°W、10°N 附近的开阔月表出发，可走离基地。启用 DEM
+            时随高程行走；近景月壤纹理、基地与人物为示意，全球数据不含米级地貌。
+          </p>
+        </details>
       </section>
     </aside>
     <div
@@ -589,8 +574,7 @@ onBeforeUnmount(() => {
             </dd>
           </div>
         </dl>
-        <span class="inline-note">当前参数为教学示意</span></template
-      >
+      </template>
     </div>
 
     <div v-if="sceneMode === 'roam'" class="roaming-strip">
@@ -639,14 +623,16 @@ onBeforeUnmount(() => {
         </div>
       </section>
     </div>
-    <div class="scene-status" role="status">
+    <div
+      class="scene-status"
+      :class="{ 'visually-hidden': ready }"
+      role="status"
+    >
       <span class="status-dot" :class="{ ready }" />{{
         ready ? "场景已就绪" : "正在准备场景"
       }}
     </div>
-    <div v-if="sceneMode !== 'system'" class="source-credit">
-      NASA / USGS · 现今数据与教学示意分开标注
-    </div>
+    <div v-if="sceneMode !== 'system'" class="source-credit">NASA / USGS</div>
     <div
       v-if="aboutOpen"
       class="modal-backdrop"

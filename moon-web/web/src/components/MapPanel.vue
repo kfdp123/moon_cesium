@@ -94,14 +94,10 @@ function move(index: number, step: number) {
         恢复内置图层
       </button>
     </div>
-    <p class="panel-note">保存后刷新可恢复，本浏览器独立保存。</p>
     <div class="section-label">
       地图与高程
       <button class="text-button" @click="emit('retry')">重试加载</button>
     </div>
-    <p class="panel-note">
-      勾选显示，点击右侧按钮调节图层。叠放序号越大越靠上。
-    </p>
     <div class="layer-tree" aria-label="地图图层树">
       <section v-for="group in groups" :key="group.id" class="tree-group">
         <div class="tree-group-heading">
@@ -154,9 +150,15 @@ function move(index: number, step: number) {
                 <SlidersHorizontal :size="16" />
               </button>
             </div>
-            <small class="layer-status">{{
-              catalog.layerStatus[layer.id] || "等待加载"
-            }}</small>
+            <small
+              class="layer-status"
+              :class="{
+                'visually-hidden':
+                  !layer.visible ||
+                  !/加载中|失败/.test(catalog.layerStatus[layer.id] || ''),
+              }"
+              >{{ catalog.layerStatus[layer.id] || "等待加载" }}</small
+            >
             <div v-if="selected === layer.id" class="tree-layer-settings">
               <p>{{ layer.description }}</p>
               <label v-if="layer.kind !== 'terrain'" class="field horizontal"
@@ -203,7 +205,6 @@ function move(index: number, step: number) {
         </div>
       </section>
     </div>
-    <p class="panel-note">在线数据为现今月表，早期场景仅作位置参照。</p>
     <details>
       <summary>添加在线图层</summary>
       <label class="field">图层名称<input v-model="name" /></label>
