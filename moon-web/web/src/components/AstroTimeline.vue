@@ -4,6 +4,8 @@ import { JulianDate, Timeline } from "cesium";
 import { Pause, Play, SkipBack, SkipForward } from "@lucide/vue";
 import { useAstronomy } from "../stores/astronomy";
 const astronomy = useAstronomy();
+defineProps<{ expanded: boolean }>();
+defineEmits<{ toggle: [] }>();
 const host = ref<HTMLElement>();
 const dateInput = ref<HTMLInputElement>();
 const date = ref("");
@@ -71,11 +73,12 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-  <div class="astro-time-controls">
+  <div class="astro-time-controls" :class="{ compact: !expanded }">
     <div class="astro-playback">
       <button
         class="icon-button"
         aria-label="后退一天"
+        v-show="expanded"
         @click="astronomy.shift(-1)"
       >
         <SkipBack :size="20" />
@@ -90,11 +93,22 @@ onBeforeUnmount(() => {
       <button
         class="icon-button"
         aria-label="前进一天"
+        v-show="expanded"
         @click="astronomy.shift(1)"
       >
         <SkipForward :size="20" />
       </button>
-      <label
+      <span v-if="!expanded" class="compact-date"
+        >{{ date.replace("T", " ") }} <small>UTC</small></span
+      >
+      <button
+        class="text-button time-toggle"
+        :aria-expanded="expanded"
+        @click="$emit('toggle')"
+      >
+        {{ expanded ? "收起时间轴" : "展开时间轴" }}
+      </button>
+      <label v-show="expanded"
         >UTC<input
           ref="dateInput"
           type="datetime-local"
@@ -105,6 +119,7 @@ onBeforeUnmount(() => {
           @change="setDate"
       /></label>
       <select
+        v-show="expanded"
         aria-label="时间倍速"
         v-model.number="multiplier"
         @change="astronomy.clock.multiplier = multiplier"
@@ -116,6 +131,7 @@ onBeforeUnmount(() => {
         <option :value="604800">1 秒 = 7 天</option>
       </select>
       <button
+        v-show="expanded"
         class="text-button"
         @click="
           astronomy.seek(new Date().toISOString());
@@ -124,14 +140,26 @@ onBeforeUnmount(() => {
       >
         现在
       </button>
-      <select aria-label="时间轴跨度" v-model.number="span" @change="fit">
+      <select
+        v-show="expanded"
+        aria-label="时间轴跨度"
+        v-model.number="span"
+        @change="fit"
+      >
         <option :value="1">1 天</option>
         <option :value="7">7 天</option>
         <option :value="30">30 天</option>
         <option :value="365">1 年</option>
       </select>
-      <button class="text-button" @click="fit">定位当前</button>
+      <button v-show="expanded" class="text-button" @click="fit">
+        定位当前
+      </button>
     </div>
-    <div ref="host" class="native-timeline" aria-label="Cesium 日期时间轴" />
+    <div
+      v-show="expanded"
+      ref="host"
+      class="native-timeline"
+      aria-label="Cesium 日期时间轴"
+    />
   </div>
 </template>

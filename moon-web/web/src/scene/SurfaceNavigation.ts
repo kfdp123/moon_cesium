@@ -31,6 +31,10 @@ export class SurfaceNavigation {
   private lastTime = performance.now();
   private originalNear = 1;
   private sunlight = false;
+  private returnView?: {
+    destination: Cartesian3;
+    orientation: { direction: Cartesian3; up: Cartesian3 };
+  };
   private removeTick: () => void;
   private readonly keydown = (event: KeyboardEvent) => {
     if (this.mode === "orbit" || document.activeElement !== this.viewer.canvas)
@@ -70,15 +74,29 @@ export class SurfaceNavigation {
   }
 
   setMode(mode: NavigationMode) {
+    const camera = this.viewer.camera;
+    if (this.mode === "orbit" && mode !== "orbit") {
+      this.returnView = {
+        destination: Cartesian3.clone(camera.positionWC),
+        orientation: {
+          direction: Cartesian3.clone(camera.directionWC),
+          up: Cartesian3.clone(camera.upWC),
+        },
+      };
+    }
     this.clear();
     this.mode = "orbit";
-    const camera = this.viewer.camera;
     camera.cancelFlight();
     this.viewer.scene.screenSpaceCameraController.enableInputs =
       mode === "orbit";
     if (mode === "orbit") {
       camera.frustum.near = this.originalNear;
       this.viewer.scene.globe.material = undefined;
+      if (this.returnView) {
+        camera.setView(this.returnView);
+        this.returnView = undefined;
+        this.viewer.scene.requestRender();
+      }
       return;
     }
     camera.frustum.near = 0.1;

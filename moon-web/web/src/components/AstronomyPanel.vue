@@ -4,7 +4,7 @@ import { Cartesian3, JulianDate } from "cesium";
 import { useAstronomy } from "../stores/astronomy";
 import { lunarEphemeris } from "../scene/lunarEphemeris";
 const astronomy = useAstronomy();
-const emit = defineEmits<{ view: [value: "moon" | "system"]; base: [] }>();
+const emit = defineEmits<{ base: [] }>();
 const info = ref(lunarEphemeris(astronomy.clock.currentTime));
 let removeTick: () => void;
 let updated = 0;
@@ -53,23 +53,6 @@ function shadowExample() {
 </script>
 <template>
   <section class="panel-section astronomy-panel">
-    <div class="section-label">观察视图</div>
-    <button
-      class="navigation-card"
-      :class="{ active: astronomy.view === 'moon' }"
-      @click="emit('view', 'moon')"
-    >
-      <strong>月球近景 · 自转与昼夜</strong
-      ><small>观察表面转动、太阳照射和月面局部阴影。</small>
-    </button>
-    <button
-      class="navigation-card"
-      :class="{ active: astronomy.view === 'system' }"
-      @click="emit('view', 'system')"
-    >
-      <strong>地月全景 · 绕地公转</strong
-      ><small>固定惯性视角下，月球沿轨道运动并同步自转。</small>
-    </button>
     <label class="checkbox-row"
       ><input
         type="checkbox"

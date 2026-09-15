@@ -318,27 +318,6 @@ summary {
   border-color: #b8dacf;
   background: #19302e;
 }
-.roaming-help {
-  position: absolute;
-  bottom: 30px;
-  left: 30px;
-  right: 30px;
-  display: flex;
-  gap: 15px;
-  align-items: center;
-  background: #0a141ee8;
-  padding: 15px;
-  border-radius: 7px;
-  font-size: 1rem;
-  z-index: 2;
-}
-.roaming-help span {
-  color: #9db5c1;
-  flex: 1;
-}
-.roaming-help button {
-  color: #e6bb76;
-}
 .scene-message {
   z-index: 10;
 }
@@ -413,24 +392,7 @@ input[type="number"] {
   line-height: 1.7;
   overflow-wrap: anywhere;
 }
-.roaming-help {
-  bottom: 30px;
-  left: 20px;
-  right: 20px;
-  flex-wrap: wrap;
-  font-size: 0.9375rem;
-  border: 1px solid #48616a;
-}
-.roaming-help button {
-  padding: 8px 12px;
-  border: 1px solid #9b855e;
-  border-radius: 6px;
-}
 @media (max-width: 1100px) {
-  .roaming-help span {
-    flex-basis: 100%;
-    order: 3;
-  }
   .rich-detail {
     right: 12px;
     width: calc(100% - 24px);
@@ -450,30 +412,6 @@ input[type="number"] {
   .modal {
     padding: 22px;
   }
-}
-.time-dock {
-  flex-shrink: 0;
-  background: #122129;
-  border-top: 1px solid #395049;
-}
-.time-mode-tabs {
-  display: flex;
-  gap: 8px;
-  padding: 6px 24px 0;
-}
-.time-mode-tabs button {
-  font-size: 0.875rem;
-  padding: 6px 12px;
-  border-radius: 6px;
-  color: #adc0ca;
-}
-.time-mode-tabs button[aria-pressed="true"] {
-  color: #dffff1;
-  background: #2b4942;
-}
-.time-dock .timeline-panel {
-  border-top: 0;
-  height: 100px;
 }
 .astro-time-controls {
   padding: 8px 24px 10px;
@@ -547,14 +485,6 @@ input[type="number"] {
   margin: 0;
   font-variant-numeric: tabular-nums;
 }
-@media (max-width: 1400px) {
-  .app-header nav button {
-    padding-inline: 9px;
-  }
-  .brand-subtitle {
-    display: none;
-  }
-}
 @media (max-width: 1100px) {
   .astro-playback {
     gap: 6px;
@@ -567,15 +497,6 @@ input[type="number"] {
 @media (max-width: 760px) {
   .astro-time-controls {
     padding-inline: 12px;
-  }
-  .time-mode-tabs {
-    padding-inline: 12px;
-  }
-  .time-mode-tabs button {
-    font-size: 0.8125rem;
-  }
-  .app-header nav button {
-    font-size: 0.8125rem;
   }
   .astro-playback label {
     order: 2;

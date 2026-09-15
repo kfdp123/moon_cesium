@@ -5,7 +5,7 @@ test("parameter scene, catalogs, model and navigation", async ({ page }) => {
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
   await expect(page.getByText("场景已就绪")).toBeVisible();
-  await expect(page.locator(".moon-facts")).toContainText("388");
+  await page.getByRole("button", { name: "参数模型", exact: true }).click();
   await page.waitForTimeout(2000);
   await page.screenshot({ path: "test-results/01-moon.png" });
   for (const name of ["移除一半", "完整球", "移除 ¼", "完整球", "移除一半"]) {
@@ -48,6 +48,7 @@ test("parameter scene, catalogs, model and navigation", async ({ page }) => {
     .click();
   await page.reload();
   await page.getByText("场景已就绪").waitFor();
+  await page.getByRole("button", { name: "参数模型", exact: true }).click();
   await expect(page.getByLabel("月壳厚度", { exact: true })).toHaveValue(
     "80.0",
   );
@@ -65,8 +66,10 @@ test("parameter scene, catalogs, model and navigation", async ({ page }) => {
   await page.waitForTimeout(2000);
   await page.screenshot({ path: "test-results/03-point-details.png" });
   await page.getByLabel("关闭详情").click();
-  await page.getByRole("button", { name: "漫游场景", exact: true }).click();
+  await page.getByRole("button", { name: "月表漫游", exact: true }).click();
   for (const name of ["环游月面基地", "第一视角漫游", "人物第三视角"]) {
+    if (!(await page.locator(".floating-panel").isVisible()))
+      await page.getByRole("button", { name: "漫游方式", exact: true }).click();
     await page.getByRole("button", { name: new RegExp(name) }).click();
     await page.waitForTimeout(1500);
     await expect(page.getByText("月球场景暂时无法加载")).toHaveCount(0);
@@ -77,6 +80,7 @@ test("parameter scene, catalogs, model and navigation", async ({ page }) => {
   await page.waitForTimeout(500);
   await page.keyboard.up("KeyW");
   await page.getByRole("button", { name: "退出漫游", exact: true }).click();
+  await page.getByRole("button", { name: "月球探索", exact: true }).click();
   await page.getByRole("button", { name: "图层管理", exact: true }).click();
   await page.getByLabel("LOLA 三维高程 · 0.25°", { exact: true }).check();
   await expect(

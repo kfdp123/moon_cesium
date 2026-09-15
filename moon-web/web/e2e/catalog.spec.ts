@@ -63,6 +63,8 @@ test("point create, edit, map picking, export, import and persistence", async ({
   await expect(
     page.getByRole("heading", { name: "测试点位", exact: true }),
   ).toBeVisible();
+  await page.getByRole("button", { name: "点位管理", exact: true }).click();
+  await page.getByLabel("搜索点位", { exact: true }).fill("测试点位");
   const exported = page.waitForEvent("download");
   await page.getByRole("button", { name: "导出", exact: true }).click();
   expect((await exported).suggestedFilename()).toBe("moon-points.geojson");
@@ -102,6 +104,7 @@ test("narrow window keeps the workspace usable", async ({ page }) => {
   await page.setViewportSize({ width: 760, height: 900 });
   await page.goto("/");
   await page.getByText("场景已就绪").waitFor();
+  await page.getByRole("button", { name: "参数模型", exact: true }).click();
   await page.getByRole("button", { name: "移除 ¼", exact: true }).click();
   await page.waitForTimeout(1500);
   await page.screenshot({ path: "test-results/narrow.png", fullPage: true });

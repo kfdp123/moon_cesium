@@ -7,6 +7,10 @@ export const useExplorer = defineStore("explorer", () => {
   const cutaway = ref<CutawayMode>("full");
   const epochIndex = ref(3);
   const savedModels = ref<Record<string, MoonLayer[]>>({});
+  const drafts: Record<string, MoonLayer[]> = {};
+  function rememberModel() {
+    drafts[epoch.value.id] = JSON.parse(JSON.stringify(layers.value));
+  }
   const layers = ref<MoonLayer[]>(structuredClone(epochs[3].layers));
   const selectedLayer = ref<LayerId | null>(null);
   const selectedLandmark = ref<string | null>(null);
@@ -32,7 +36,9 @@ export const useExplorer = defineStore("explorer", () => {
     epochIndex.value = index;
     layers.value = JSON.parse(
       JSON.stringify(
-        savedModels.value[epochs[index].id] || epochs[index].layers,
+        drafts[epochs[index].id] ||
+          savedModels.value[epochs[index].id] ||
+          epochs[index].layers,
       ),
     );
     hiddenLayers.value = [];
@@ -49,12 +55,14 @@ export const useExplorer = defineStore("explorer", () => {
     }));
   }
   function saveModel() {
+    rememberModel();
     savedModels.value[epoch.value.id] = JSON.parse(
       JSON.stringify(layers.value),
     );
     localStorage.setItem("moon-models-v1", JSON.stringify(savedModels.value));
   }
   function restoreModel() {
+    delete drafts[epoch.value.id];
     delete savedModels.value[epoch.value.id];
     localStorage.setItem("moon-models-v1", JSON.stringify(savedModels.value));
     setEpoch(epochIndex.value);
@@ -145,6 +153,7 @@ export const useExplorer = defineStore("explorer", () => {
     if (hiddenLayers.value.includes(id)) selectedLayer.value = null;
   }
   return {
+    rememberModel,
     saveModel,
     restoreModel,
     loadModels,

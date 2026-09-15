@@ -41,25 +41,33 @@ watch(
     ><ModelPreview v-if="modelOpen" :key="point.modelUrl" :url="point.modelUrl"
   /></template>
   <p v-else class="empty-resource">暂无已核实模型</p>
-  <h4>文献</h4>
-  <p v-if="!point.references.length" class="empty-resource">暂无关联文献</p>
-  <a
-    v-for="link in point.references"
-    :key="link.url"
-    :href="link.url"
-    target="_blank"
-    rel="noreferrer"
-    >{{ link.title }} ↗</a
-  >
-  <h4>相关链接</h4>
-  <a
-    v-for="link in point.links"
-    :key="link.url"
-    :href="link.url"
-    target="_blank"
-    rel="noreferrer"
-    >{{ link.title }} ↗</a
-  ><a v-if="point.source" :href="point.source" target="_blank" rel="noreferrer"
-    >原始数据来源 ↗</a
-  >
+  <details :key="`${point.id}-references`">
+    <summary>文献 · {{ point.references.length }}</summary>
+    <p v-if="!point.references.length" class="empty-resource">暂无关联文献</p>
+    <a
+      v-for="link in point.references"
+      :key="link.url"
+      :href="link.url"
+      target="_blank"
+      rel="noreferrer"
+      >{{ link.title }} ↗</a
+    >
+  </details>
+  <details :key="`${point.id}-links`">
+    <summary>相关链接与来源</summary>
+    <a
+      v-for="link in point.links"
+      :key="link.url"
+      :href="link.url"
+      target="_blank"
+      rel="noreferrer"
+      >{{ link.title }} ↗</a
+    ><a
+      v-if="point.source"
+      :href="point.source"
+      target="_blank"
+      rel="noreferrer"
+      >原始数据来源 ↗</a
+    >
+  </details>
 </template>

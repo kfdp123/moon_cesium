@@ -1,0 +1,380 @@
+/* The canvas never participates in panel layout. Only visible controls catch input. */
+.immersive-app {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  --edge: 20px;
+  --header-bottom: 96px;
+  --time-space: 104px;
+  --glass: #11222deb;
+}
+.immersive-app.time-expanded {
+  --time-space: 202px;
+}
+.immersive-app.geology-mode {
+  --time-space: 150px;
+}
+.scene-canvas {
+  position: absolute;
+  inset: 0;
+}
+.floating-header {
+  position: absolute;
+  top: var(--edge);
+  left: var(--edge);
+  right: var(--edge);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  pointer-events: none;
+  z-index: 4;
+}
+.floating-header > * {
+  pointer-events: auto;
+}
+.floating-header .brand,
+.floating-actions,
+.scene-switcher,
+.floating-tools,
+.floating-panel,
+.floating-time,
+.roaming-strip {
+  background: var(--glass);
+  border: 1px solid #38515c;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px #0004;
+  backdrop-filter: blur(16px);
+}
+.floating-header .brand {
+  padding: 8px 14px;
+}
+.floating-header .brand strong {
+  font-size: 1.25rem;
+}
+.floating-header .brand-symbol {
+  width: 34px;
+  height: 34px;
+}
+.scene-switcher {
+  display: flex;
+  padding: 5px;
+  gap: 4px;
+}
+.scene-switcher button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 18px;
+  border-radius: 8px;
+  font-size: 1rem;
+  white-space: nowrap;
+  color: #b8cad1;
+}
+.scene-switcher button[aria-pressed="true"],
+.floating-tools button[aria-pressed="true"] {
+  background: #2d5148;
+  color: #e1fff1;
+  box-shadow: inset 0 0 0 1px #6a9685;
+}
+.floating-actions {
+  display: flex;
+  padding: 4px;
+}
+.scene-caption {
+  position: absolute;
+  top: var(--header-bottom);
+  left: var(--edge);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
+  text-shadow: 0 2px 8px #000;
+  color: #e2eee9;
+}
+.scene-caption strong {
+  font-size: 1.125rem;
+}
+.scene-caption span {
+  font-size: 0.875rem;
+  color: #b5c7cd;
+}
+.floating-tools {
+  position: absolute;
+  top: var(--header-bottom);
+  right: var(--edge);
+  width: 72px;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: calc(100% - var(--header-bottom) - var(--time-space));
+  overflow-y: auto;
+  z-index: 4;
+}
+.floating-tools button {
+  min-height: 60px;
+  padding: 8px 2px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  border-radius: 8px;
+}
+.floating-tools button span {
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+.tool-divider {
+  height: 1px;
+  background: #38515c;
+  margin: 3px 7px;
+  flex-shrink: 0;
+}
+.floating-panel,
+.floating-detail {
+  position: absolute;
+  top: var(--header-bottom);
+  right: calc(var(--edge) + 86px);
+  bottom: var(--time-space);
+  width: min(400px, calc(100% - 118px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding: 0 20px 20px;
+  z-index: 3;
+}
+.floating-panel .panel-heading {
+  margin: 0 0 12px;
+  padding-top: 12px;
+  background: #11222df5;
+}
+.floating-panel h1 {
+  font-size: 1.25rem;
+  margin: 0;
+}
+.floating-detail {
+  padding: 22px;
+  max-height: none;
+  background: var(--glass);
+}
+.floating-detail .detail-close {
+  top: 0;
+}
+.floating-time {
+  position: absolute;
+  bottom: 38px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 40px);
+  z-index: 5;
+}
+.time-expanded .floating-time,
+.geology-mode .floating-time {
+  width: min(1080px, calc(100% - 40px));
+}
+.floating-time .astro-time-controls {
+  padding: 10px 14px;
+}
+.floating-time .astro-playback {
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+}
+.floating-time .native-timeline {
+  margin-top: 9px;
+}
+.floating-time .compact .astro-playback {
+  flex-wrap: nowrap;
+}
+.compact-date {
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.compact-date small {
+  color: #98b2be;
+}
+.time-toggle {
+  margin-left: auto;
+  white-space: nowrap;
+}
+.floating-time .timeline-panel {
+  background: none;
+  border: 0;
+  height: auto;
+  min-height: 92px;
+  padding: 12px;
+  border-radius: 12px;
+}
+.floating-time .timeline-label {
+  width: 100px;
+}
+.floating-time .timeline-track {
+  min-width: 0;
+}
+.floating-time .timeline-track button {
+  padding: 8px 12px;
+}
+.scene-status,
+.source-credit {
+  position: absolute;
+  bottom: 10px;
+  font-size: 0.75rem;
+  color: #acc2ca;
+  pointer-events: none;
+}
+.scene-status {
+  right: var(--edge);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.source-credit {
+  left: 150px;
+}
+.immersive-app .cesium-viewer-bottom {
+  bottom: 6px !important;
+}
+.roaming-strip {
+  position: absolute;
+  left: var(--edge);
+  top: calc(var(--header-bottom) + 64px);
+  width: min(400px, calc(100% - 118px));
+  padding: 12px 16px;
+  font-size: 0.875rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.roaming-strip strong {
+  flex: 1 0 100%;
+  font-size: 1rem;
+}
+.roaming-strip button {
+  color: #bbdfd0;
+  padding: 5px 0;
+}
+.roaming-strip p {
+  flex: 1 0 100%;
+  margin: 0;
+  line-height: 1.8;
+  color: #adc0c9;
+}
+.immersive-app:has(.floating-panel) .roaming-strip,
+.immersive-app:has(.floating-detail) .roaming-strip {
+  display: none;
+}
+@media (max-width: 1100px) {
+  .immersive-app {
+    --edge: 12px;
+    --header-bottom: 142px;
+  }
+  .floating-header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .scene-switcher {
+    order: 3;
+    width: 100%;
+    justify-content: space-around;
+  }
+  .scene-switcher button {
+    flex: 1;
+    justify-content: center;
+    padding: 10px 6px;
+  }
+  .floating-panel,
+  .floating-detail {
+    width: min(380px, calc(100% - 110px));
+  }
+  .source-credit {
+    display: none;
+  }
+  .floating-time .timeline-label {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  .immersive-app {
+    --header-bottom: 142px;
+  }
+  .immersive-app.time-expanded {
+    --time-space: 245px;
+  }
+  .scene-switcher button {
+    font-size: 0.875rem;
+    gap: 5px;
+  }
+  .floating-tools {
+    width: 60px;
+  }
+  .floating-tools button {
+    min-height: 54px;
+  }
+  .floating-tools button span {
+    font-size: 0.875rem;
+  }
+  .floating-panel,
+  .floating-detail {
+    right: 82px;
+    width: calc(100% - 94px);
+    padding-inline: 14px;
+  }
+  .scene-caption {
+    max-width: calc(100% - 94px);
+  }
+  .immersive-app:has(.floating-panel) .scene-caption,
+  .immersive-app:has(.floating-detail) .scene-caption {
+    visibility: hidden;
+  }
+  .floating-time {
+    max-width: calc(100% - 24px);
+  }
+  .time-expanded .floating-time,
+  .geology-mode .floating-time {
+    width: calc(100% - 24px);
+  }
+  .floating-time .astro-playback input {
+    width: 195px;
+  }
+  .floating-time .astro-playback label {
+    order: 0;
+  }
+  .floating-time .timeline-panel {
+    overflow-x: auto;
+  }
+  .floating-time .timeline-track {
+    min-width: 560px;
+  }
+  .floating-time .compact-date {
+    font-size: 0.8125rem;
+  }
+  .floating-time .text-button {
+    font-size: 0.8125rem;
+  }
+}
+@media (max-width: 600px) {
+  .immersive-app {
+    --header-bottom: 160px;
+  }
+  .scene-switcher button {
+    min-width: 0;
+    flex-direction: column;
+    font-size: 0.8125rem;
+    padding: 8px 2px;
+  }
+}
+@media (max-height: 650px) {
+  .floating-panel,
+  .floating-detail {
+    bottom: 100px;
+  }
+  .time-expanded:has(.floating-panel) .floating-time {
+    max-height: 84px;
+    overflow-y: auto;
+  }
+}

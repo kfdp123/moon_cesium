@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 test("layer branches and parameter sliders are operable", async ({ page }) => {
   await page.goto("/");
   await page.getByText("场景已就绪").waitFor();
+  await page.getByRole("button", { name: "参数模型", exact: true }).click();
   const thickness = page.getByRole("slider", {
     name: "月壳厚度滑块",
     exact: true,
@@ -21,6 +22,7 @@ test("layer branches and parameter sliders are operable", async ({ page }) => {
     "47.0",
   );
   await page.screenshot({ path: "test-results/parameter-sliders.png" });
+  await page.getByRole("button", { name: "月球探索", exact: true }).click();
   await page.getByRole("button", { name: "图层管理", exact: true }).click();
   await page.getByRole("button", { name: "月表影像分组", exact: true }).click();
   await expect(
@@ -55,7 +57,7 @@ test("outdoor walking remains available away from the base, with and without DEM
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
   await page.getByText("场景已就绪").waitFor();
-  await page.getByRole("button", { name: "漫游场景", exact: true }).click();
+  await page.getByRole("button", { name: "月表漫游", exact: true }).click();
   await page.getByRole("button", { name: /^第一视角漫游/ }).click();
   await page.waitForTimeout(2500);
   const canvas = page.locator(".cesium-surface canvas");
@@ -69,6 +71,7 @@ test("outdoor walking remains available away from the base, with and without DEM
   expect((await canvas.screenshot()).equals(before)).toBe(false);
   await page.screenshot({ path: "test-results/surface-walk-away.png" });
   await page.getByRole("button", { name: "退出漫游", exact: true }).click();
+  await page.getByRole("button", { name: "月球探索", exact: true }).click();
   await page.getByRole("button", { name: "图层管理", exact: true }).click();
   await page.getByLabel("LOLA 三维高程 · 0.25°", { exact: true }).check();
   await expect(
@@ -77,7 +80,7 @@ test("outdoor walking remains available away from the base, with and without DEM
       .filter({ hasText: "LOLA 三维高程 · 0.25°" })
       .getByText("已加载", { exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "漫游场景", exact: true }).click();
+  await page.getByRole("button", { name: "月表漫游", exact: true }).click();
   await page.getByRole("button", { name: /^人物第三视角/ }).click();
   await page.waitForTimeout(3000);
   await page.screenshot({ path: "test-results/surface-walk-dem.png" });

@@ -25,7 +25,7 @@ test("native timeline controls one clock across lunar rotation and Earth orbit v
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
   await page.getByText("场景已就绪").waitFor();
-  await page.getByRole("button", { name: "天体运动", exact: true }).click();
+  await page.getByRole("button", { name: "展开时间轴", exact: true }).click();
   await setDate(page, "2026-09-15T12:00");
   await page.getByRole("button", { name: "前进一天", exact: true }).click();
   await expect(page.getByLabel("模拟日期 UTC", { exact: true })).toHaveValue(
@@ -50,7 +50,7 @@ test("native timeline controls one clock across lunar rotation and Earth orbit v
   await expect(date).not.toHaveValue(paused);
   const scrubbed = await date.inputValue();
   await page.screenshot({ path: "test-results/time-moon.png" });
-  await page.getByRole("button", { name: /地月全景 · 绕地公转/ }).click();
+  await page.getByRole("button", { name: "地月运动", exact: true }).click();
   await page.getByText("场景已就绪").waitFor();
   await expect(date).toHaveValue(scrubbed);
   await page.waitForTimeout(1500);
@@ -63,19 +63,17 @@ test("native timeline controls one clock across lunar rotation and Earth orbit v
       orbitBefore,
     ),
   ).toBe(false);
+  await page.getByRole("button", { name: "运动设置", exact: true }).click();
   await page.getByLabel("真实大小与距离比例", { exact: true }).check();
   await page.waitForTimeout(600);
   await page.screenshot({ path: "test-results/time-real-scale.png" });
-  await page.getByRole("button", { name: /月球近景 · 自转与昼夜/ }).click();
+  await page.getByRole("button", { name: "月球探索", exact: true }).click();
   await page.getByText("场景已就绪").waitFor();
   const saved = await date.inputValue();
-  await page
-    .getByRole("button", { name: "地质年代 · 内部演化", exact: true })
-    .click();
+  await page.getByRole("button", { name: "内部与演化", exact: true }).click();
   await page.locator(".timeline-track button").nth(1).click();
-  await page
-    .getByRole("button", { name: "日期时间 · 天体运动", exact: true })
-    .click();
+  await page.getByRole("button", { name: "月球探索", exact: true }).click();
+  await page.getByRole("button", { name: "展开时间轴", exact: true }).click();
   await expect(date).toHaveValue(saved);
   expect(errors).toEqual([]);
   await expect(page.getByText("月球场景暂时无法加载")).toHaveCount(0);
@@ -89,14 +87,16 @@ test("base shadows change ground pixels without moving the camera", async ({
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
   await page.getByText("场景已就绪").waitFor();
-  await page.getByRole("button", { name: "天体运动", exact: true }).click();
+  await page.getByRole("button", { name: "展开时间轴", exact: true }).click();
   await setDate(page, "2026-09-15T12:00");
+  await page.getByRole("button", { name: "光照设置", exact: true }).click();
   await page
     .getByRole("button", { name: "前往基地看阴影", exact: true })
     .click();
   await page.waitForTimeout(2000);
   const shaded = await groundPixels(page);
   await page.screenshot({ path: "test-results/time-shadow-on.png" });
+  await page.getByRole("button", { name: "光照设置", exact: true }).click();
   await page.getByLabel("基地模型地面投影", { exact: true }).uncheck();
   await page.waitForTimeout(1000);
   const plain = await groundPixels(page);
@@ -104,6 +104,7 @@ test("base shadows change ground pixels without moving the camera", async ({
     (value, i) => value - shaded[i] > 20,
   ).length;
   expect(darkerPixels).toBeGreaterThan(40);
+  await page.getByRole("button", { name: "关闭操作面板", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "退出漫游", exact: true }),
   ).toBeVisible();

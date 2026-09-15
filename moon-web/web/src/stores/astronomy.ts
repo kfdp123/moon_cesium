@@ -19,7 +19,6 @@ export const useAstronomy = defineStore("astronomy", () => {
   const shadows = ref(true);
   const inertialCamera = ref(true);
   const trueScale = ref(false);
-  const timelineMode = ref<"date" | "geology">("date");
   const command = ref(0);
   function seek(iso: string) {
     const date = JulianDate.fromIso8601(iso);
@@ -52,7 +51,6 @@ export const useAstronomy = defineStore("astronomy", () => {
     shadows,
     inertialCamera,
     trueScale,
-    timelineMode,
     command,
     seek,
     shift,
