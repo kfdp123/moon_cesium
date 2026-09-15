@@ -451,3 +451,133 @@ input[type="number"] {
     padding: 22px;
   }
 }
+.time-dock {
+  flex-shrink: 0;
+  background: #122129;
+  border-top: 1px solid #395049;
+}
+.time-mode-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 6px 24px 0;
+}
+.time-mode-tabs button {
+  font-size: 0.875rem;
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: #adc0ca;
+}
+.time-mode-tabs button[aria-pressed="true"] {
+  color: #dffff1;
+  background: #2b4942;
+}
+.time-dock .timeline-panel {
+  border-top: 0;
+  height: 100px;
+}
+.astro-time-controls {
+  padding: 8px 24px 10px;
+}
+.astro-playback {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.astro-playback .play-button {
+  width: 38px;
+  height: 38px;
+}
+.astro-playback .icon-button {
+  min-width: 36px;
+  min-height: 38px;
+}
+.astro-playback label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: #b7cad3;
+}
+.astro-playback input {
+  width: 235px;
+  padding: 6px 8px;
+  color-scheme: dark;
+  font-size: 0.875rem;
+}
+.astro-playback select {
+  width: auto;
+  max-width: 180px;
+  padding: 7px 10px;
+  font-size: 0.875rem;
+}
+.native-timeline {
+  height: 42px;
+  position: relative;
+}
+.native-timeline .cesium-timeline-main {
+  font-size: 14px;
+  height: 40px;
+  border-radius: 5px;
+  border-color: #48646c;
+  background: #10202c;
+}
+.native-timeline .cesium-timeline-bar {
+  background: #18303d;
+}
+.native-timeline .cesium-timeline-ticLabel {
+  color: #d0e1e9;
+}
+.astronomy-facts {
+  border: 1px solid #3c5662;
+  padding: 14px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+.astronomy-facts div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 12px 0;
+}
+.astronomy-facts dt {
+  color: #a6c0ca;
+}
+.astronomy-facts dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 1400px) {
+  .app-header nav button {
+    padding-inline: 9px;
+  }
+  .brand-subtitle {
+    display: none;
+  }
+}
+@media (max-width: 1100px) {
+  .astro-playback {
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .astro-playback input {
+    width: 215px;
+  }
+}
+@media (max-width: 760px) {
+  .astro-time-controls {
+    padding-inline: 12px;
+  }
+  .time-mode-tabs {
+    padding-inline: 12px;
+  }
+  .time-mode-tabs button {
+    font-size: 0.8125rem;
+  }
+  .app-header nav button {
+    font-size: 0.8125rem;
+  }
+  .astro-playback label {
+    order: 2;
+  }
+}

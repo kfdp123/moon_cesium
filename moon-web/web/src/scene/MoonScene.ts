@@ -24,6 +24,8 @@ import {
   Viewer,
   VerticalOrigin,
   DistanceDisplayCondition,
+  Clock,
+  ClockViewModel,
 } from "cesium";
 import { MOON_RADIUS_M } from "../data/moon";
 import type {
@@ -35,6 +37,7 @@ import type {
 import { buildShell, type ShellMesh } from "./shellGeometry";
 import { MapLayers } from "./MapLayers";
 import { SurfaceNavigation } from "./SurfaceNavigation";
+import { LunarLighting, type LightingOptions } from "./LunarLighting";
 
 function geometry(mesh: ShellMesh): Geometry {
   const attributes = new GeometryAttributes();
@@ -60,6 +63,8 @@ function geometry(mesh: ShellMesh): Geometry {
 
 export class MoonScene {
   private readonly viewer: Viewer;
+  private readonly clockModel: ClockViewModel;
+  private readonly lighting: LunarLighting;
   private readonly interior = new PrimitiveCollection();
   private readonly mapLayers: MapLayers;
   private readonly navigation: SurfaceNavigation;
@@ -77,9 +82,12 @@ export class MoonScene {
     onSelection: (selection: SceneSelection) => void,
     reportLayer: (id: string, status: string) => void,
     reportError: (message: string) => void,
+    clock: Clock,
   ) {
     Ellipsoid.default = Ellipsoid.MOON;
+    this.clockModel = new ClockViewModel(clock);
     this.viewer = new Viewer(container, {
+      clockViewModel: this.clockModel,
       globe: new Globe(Ellipsoid.MOON),
       terrainProvider: new EllipsoidTerrainProvider({
         ellipsoid: Ellipsoid.MOON,
@@ -116,6 +124,7 @@ export class MoonScene {
     this.viewer.resolutionScale = Math.min(window.devicePixelRatio, 1.5);
     this.mapLayers = new MapLayers(this.viewer, reportLayer);
     this.navigation = new SurfaceNavigation(this.viewer);
+    this.lighting = new LunarLighting(this.viewer);
     this.viewer.screenSpaceEventHandler.removeInputAction(
       ScreenSpaceEventType.LEFT_DOUBLE_CLICK,
     );
@@ -205,6 +214,7 @@ export class MoonScene {
   }
 
   resetCamera(animate = true) {
+    if (this.lighting) this.lighting.roaming = false;
     this.navigation?.setMode("orbit");
     const longitude = this.state?.cutaway === "full" ? 0 : 35;
     const destination = Cartesian3.fromDegrees(
@@ -244,6 +254,7 @@ export class MoonScene {
     });
   }
   setNavigation(mode: NavigationMode) {
+    this.lighting.roaming = mode !== "orbit";
     this.navigationMode = mode;
     for (const id of this.overlayIds)
       this.viewer.entities.getById(id)!.show = mode === "orbit";
@@ -262,10 +273,19 @@ export class MoonScene {
     this.viewer.render();
     return this.viewer.canvas.toDataURL("image/png");
   }
+  setLighting(options: LightingOptions) {
+    this.lighting.configure(options);
+    this.navigation.setLighting(options.lighting);
+  }
+  inspectBase() {
+    this.navigation.inspectBase();
+  }
   dispose() {
+    this.lighting.dispose();
     this.navigation.dispose();
     this.mapLayers.dispose();
     this.viewer.destroy();
+    this.clockModel.destroy();
   }
 
   private buildInterior(state: SceneState) {

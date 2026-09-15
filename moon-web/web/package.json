@@ -1,6 +1,6 @@
 {
   "name": "moon-cesium",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -19,6 +19,7 @@
     "vue": "3.5.42"
   },
   "overrides": {
+    "rollup": "npm:@rollup/wasm-node@4.63.2",
     "@cesium/engine": "19.0.0",
     "@cesium/widgets": "13.0.0",
     "@zip.js/zip.js": "2.7.70"
@@ -28,6 +29,7 @@
     "@types/node": "22.15.30",
     "@vitejs/plugin-vue": "5.2.4",
     "prettier": "3.5.3",
+    "rollup": "npm:@rollup/wasm-node@4.63.2",
     "typescript": "5.9.3",
     "vite": "6.4.3",
     "vite-plugin-static-copy": "2.3.2",

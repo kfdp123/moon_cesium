@@ -13,6 +13,7 @@
 | @cesium/widgets | 13.0.0 |
 | @zip.js/zip.js | 2.7.70 |
 | Vite | 6.4.3 |
+| Rollup（官方 WASM Node 版本） | 4.63.2 |
 | TypeScript | 5.9.3 |
 | @lucide/vue | 1.46.0 |
 | Vitest | 4.1.11 |
@@ -23,3 +24,7 @@
 Cesium 的间接依赖必须一起固定：默认范围曾解析到 widgets 13.2.1，并带入另一个 engine 21.0.1，造成压缩库导出路径冲突。通过 overrides 固定与 Cesium 1.132.0 对应的组合，未修改 node_modules 源码或增加运行时兼容分支。
 
 升级 Cesium 时一起重新检查 engine、widgets、zip.js 和静态 Workers 资源，再执行构建、几何测试与浏览器烟雾测试。此基线是功能兼容记录，不是完整安全审计。
+
+V0.3 使用 `IauOrientationAxes` 运行时导出，与此版本 Cesium 自带 Moon 使用相同的 IAU 2000 月球姿态。它未包含在公开 TypeScript 声明中，局部声明见 `scene/cesium-iau.d.ts`；升级必须重跑月球近侧、极轴与旋转测试。
+
+本机 Windows 应用控制曾阻止 Rollup 原生 `.node` 模块加载，因此通过 npm alias 和 overrides 使用官方 `@rollup/wasm-node@4.63.2`。这只替换构建工具实现，不修改系统安全策略；锁文件同时用于本地和 CI。

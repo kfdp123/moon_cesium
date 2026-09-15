@@ -2,12 +2,19 @@
 import { onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useExplorer } from "../stores/explorer";
 import { useCatalog } from "../stores/catalog";
+import { useAstronomy } from "../stores/astronomy";
 import type { NavigationMode } from "../types";
 import { MoonScene } from "../scene/MoonScene";
 
 const emit = defineEmits<{ ready: []; interact: [] }>();
 const explorer = useExplorer();
 const catalog = useCatalog();
+const astronomy = useAstronomy();
+const lightOptions = () => ({
+  lighting: astronomy.lighting,
+  shadows: astronomy.shadows,
+  inertialCamera: astronomy.inertialCamera,
+});
 const container = ref<HTMLElement>();
 const status = ref<"loading" | "ready" | "error">("loading");
 const error = ref("");
@@ -31,7 +38,9 @@ async function initialize() {
         error.value = message;
         status.value = "error";
       },
+      astronomy.clock,
     );
+    scene.setLighting(lightOptions());
     scene.applyState({ ...explorer.sceneState, points: catalog.points });
     await scene.applyMaps(catalog.mapLayers);
     status.value = "ready";
@@ -48,6 +57,7 @@ function retry() {
   void initialize();
 }
 
+watch(lightOptions, (options) => scene?.setLighting(options));
 watch(
   () => ({ ...explorer.sceneState, points: catalog.points }),
   (state) => scene?.applyState(state),
@@ -66,6 +76,7 @@ defineExpose({
   flyTo: (id: string) => scene?.flyToLandmark(id),
   capture: () => scene?.capture(),
   navigate: (mode: NavigationMode) => scene?.setNavigation(mode),
+  inspectBase: () => scene?.inspectBase(),
   reloadMaps: () => scene?.applyMaps(catalog.mapLayers, true),
 });
 </script>

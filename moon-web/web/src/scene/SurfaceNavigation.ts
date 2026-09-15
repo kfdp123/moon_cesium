@@ -11,10 +11,12 @@ import {
   Transforms,
   Viewer,
   Math as CesiumMath,
+  ShadowMode,
 } from "cesium";
 import type { NavigationMode } from "../types";
 import { terrainHeightAt } from "./lunarTerrain";
 import { regolithMaterial } from "./regolithMaterial";
+import { sunColorFragment } from "./sunAppearance";
 
 /** Walk on the lunar globe. Only the base and astronaut are schematic geometry. */
 export class SurfaceNavigation {
@@ -28,6 +30,7 @@ export class SurfaceNavigation {
   private pitch = 0;
   private lastTime = performance.now();
   private originalNear = 1;
+  private sunlight = false;
   private removeTick: () => void;
   private readonly keydown = (event: KeyboardEvent) => {
     if (this.mode === "orbit" || document.activeElement !== this.viewer.canvas)
@@ -95,6 +98,21 @@ export class SurfaceNavigation {
     this.viewer.scene.requestRender();
   }
 
+  setLighting(enabled: boolean) {
+    if (this.sunlight === enabled) return;
+    this.sunlight = enabled;
+    for (let i = 0; i < this.models.length; i++)
+      this.models.get(i).appearance = new PerInstanceColorAppearance({
+        translucent: false,
+        closed: true,
+        fragmentShaderSource: enabled ? sunColorFragment : undefined,
+      });
+  }
+  inspectBase() {
+    this.position = new Cartesian3(-45, -65, 0);
+    this.heading = 0.5;
+    this.pitch = -0.1;
+  }
   private world(local: Cartesian3) {
     const ellipsoid = this.viewer.scene.globe.ellipsoid;
     const flat = Matrix4.multiplyByPoint(
@@ -120,6 +138,7 @@ export class SurfaceNavigation {
   private box(local: Cartesian3, size: Cartesian3, color: Color) {
     return this.models.add(
       new Primitive({
+        shadows: ShadowMode.CAST_ONLY,
         geometryInstances: new GeometryInstance({
           geometry: BoxGeometry.createGeometry(
             BoxGeometry.fromDimensions({
@@ -135,6 +154,7 @@ export class SurfaceNavigation {
         appearance: new PerInstanceColorAppearance({
           translucent: false,
           closed: true,
+          fragmentShaderSource: this.sunlight ? sunColorFragment : undefined,
         }),
         asynchronous: false,
         cull: false,

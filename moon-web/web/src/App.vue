@@ -18,20 +18,32 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Type,
+  Orbit,
 } from "@lucide/vue";
 import MoonViewport from "./components/MoonViewport.vue";
 import ParameterPanel from "./components/ParameterPanel.vue";
 import MapPanel from "./components/MapPanel.vue";
 import PointPanel from "./components/PointPanel.vue";
 import PointDetails from "./components/PointDetails.vue";
+import AstronomyPanel from "./components/AstronomyPanel.vue";
+import AstroTimeline from "./components/AstroTimeline.vue";
+import OrbitalViewport from "./components/OrbitalViewport.vue";
+import { useAstronomy } from "./stores/astronomy";
 import { useExplorer } from "./stores/explorer";
 import { useCatalog } from "./stores/catalog";
 import { epochs } from "./data/moon";
 import type { CutawayMode, NavigationMode } from "./types";
 const explorer = useExplorer();
 const catalog = useCatalog();
+const astronomy = useAstronomy();
 const viewport = ref<InstanceType<typeof MoonViewport>>();
-const tab = ref<"parameters" | "maps" | "points" | "scenes">("parameters");
+const orbitalViewport = ref<InstanceType<typeof OrbitalViewport>>();
+const activeViewport = computed(() =>
+  astronomy.view === "moon" ? viewport.value : orbitalViewport.value,
+);
+const tab = ref<"parameters" | "maps" | "points" | "scenes" | "astronomy">(
+  "parameters",
+);
 const ready = ref(false);
 const playing = ref(false);
 const aboutOpen = ref(false);
@@ -44,6 +56,7 @@ const workspaces = [
   { id: "maps", label: "图层管理", icon: Layers },
   { id: "points", label: "点位管理", icon: MapPin },
   { id: "scenes", label: "漫游场景", icon: Footprints },
+  { id: "astronomy", label: "天体运动", icon: Orbit },
 ] as const;
 const landmark = computed(() =>
   catalog.points.find((p) => p.id === explorer.selectedLandmark),
@@ -93,7 +106,28 @@ function stopNavigation() {
   viewport.value?.navigate("orbit");
   if (wasRoaming) viewport.value?.reset();
 }
+function changeAstroView(view: "moon" | "system") {
+  stopNavigation();
+  pause();
+  explorer.selectedLayer = null;
+  explorer.selectedLandmark = null;
+  if (astronomy.view !== view) ready.value = false;
+  astronomy.view = view;
+}
+function selectWorkspace(value: typeof tab.value) {
+  tab.value = value;
+  panelOpen.value = true;
+  if (value === "astronomy") {
+    pause();
+    astronomy.timelineMode = "date";
+    astronomy.lighting = true;
+  } else if (astronomy.view === "system") changeAstroView("moon");
+}
 function selectEpoch(index: number) {
+  changeAstroView("moon");
+  astronomy.clock.shouldAnimate = false;
+  astronomy.command++;
+  astronomy.lighting = false;
   pause();
   stopNavigation();
   explorer.setEpoch(index);
@@ -133,6 +167,10 @@ function playback() {
     pause();
     return;
   }
+  changeAstroView("moon");
+  astronomy.clock.shouldAnimate = false;
+  astronomy.command++;
+  astronomy.lighting = false;
   stopNavigation();
   explorer.cutaway = "quarter";
   if (explorer.epochIndex === 3) explorer.setEpoch(0);
@@ -153,7 +191,7 @@ async function fullscreen() {
 }
 async function downloadImage() {
   try {
-    const url = viewport.value?.capture();
+    const url = activeViewport.value?.capture();
     if (!url) return;
     const image = new Image();
     image.src = url;
@@ -168,17 +206,21 @@ async function downloadImage() {
     context.fillStyle = "#fff";
     context.font = "14px sans-serif";
     context.fillText(
-      `月见 · ${explorer.epoch.age} · 圈层/基地/人物为教学示意`,
+      `月见 · ${astronomy.view === "system" ? "地月全景" : explorer.epoch.age} · UTC ${astronomy.clock.currentTime.toString()} · ${astronomy.view === "system" ? (astronomy.trueScale ? "真实比例" : "距离1/8、月球大小3倍") : "圈层/基地/人物为教学示意"}`,
       20,
       canvas.height - 53,
+      canvas.width - 40,
     );
     context.fillText(
-      `现今月表来源：${catalog.mapLayers
-        .filter((l) => l.visible)
-        .map((l) => l.name)
-        .join(" / ")}`,
+      astronomy.view === "system"
+        ? "月球影像：NASA LRO 展示贴图 · 天体运动：Cesium 解析近似 · 地球：示意球"
+        : `现今月表来源：${catalog.mapLayers
+            .filter((l) => l.visible)
+            .map((l) => l.name)
+            .join(" / ")}`,
       20,
       canvas.height - 23,
+      canvas.width - 40,
     );
     const link = document.createElement("a");
     link.download = `moon-${explorer.epoch.id}.png`;
@@ -213,7 +255,7 @@ onBeforeUnmount(() => {
         href="#"
         @click.prevent="
           stopNavigation();
-          viewport?.reset();
+          activeViewport?.reset();
         "
         ><span class="brand-symbol"><Moon :size="22" /></span
         ><strong>月见</strong><span class="brand-divider" /><span
@@ -227,10 +269,7 @@ onBeforeUnmount(() => {
           :key="item.id"
           :class="{ active: tab === item.id }"
           :aria-pressed="tab === item.id"
-          @click="
-            tab = item.id;
-            panelOpen = true;
-          "
+          @click="selectWorkspace(item.id)"
         >
           <component :is="item.icon" :size="20" />{{ item.label }}
         </button>
@@ -255,7 +294,7 @@ onBeforeUnmount(() => {
         class="left-panel"
         @input="
           pause();
-          stopNavigation();
+          if (tab !== 'astronomy') stopNavigation();
         "
       >
         <div class="panel-heading">
@@ -266,6 +305,7 @@ onBeforeUnmount(() => {
                 maps: "图层管理",
                 points: "科普点位",
                 scenes: "月表漫游",
+                astronomy: "自转、公转与光照",
               }[tab]
             }}
           </h1>
@@ -313,6 +353,14 @@ onBeforeUnmount(() => {
           ></template
         >
         <PointPanel v-if="tab === 'points'" @locate="locate" />
+        <AstronomyPanel
+          v-if="tab === 'astronomy'"
+          @view="changeAstroView"
+          @base="
+            navigate('first-person');
+            viewport?.inspectBase();
+          "
+        />
         <section v-if="tab === 'scenes'" class="panel-section">
           <div class="section-label">场景漫游</div>
           <button
@@ -353,29 +401,55 @@ onBeforeUnmount(() => {
         >
           <PanelLeftOpen :size="20" />展开操作面板
         </button>
-        <MoonViewport ref="viewport" @ready="ready = true" @interact="pause" />
+        <MoonViewport
+          v-if="astronomy.view === 'moon'"
+          ref="viewport"
+          @ready="ready = true"
+          @interact="pause"
+        />
+        <OrbitalViewport
+          v-else
+          ref="orbitalViewport"
+          @ready="ready = true"
+          @interact="pause"
+        />
         <div class="scene-heading">
           <span class="eyebrow"
             >月球 · {{ navigation === "orbit" ? "三维探索" : "月表漫游" }}</span
           >
-          <h2>{{ explorer.epoch.label }}</h2>
-          <span class="scene-subtitle"
-            >{{ explorer.epoch.age }} · {{ explorer.layers.length }} 个圈层 ·
-            半径 {{ explorer.radiusKm.toFixed(1) }} km</span
-          >
+          <h2>
+            {{
+              astronomy.view === "system"
+                ? "地月系统 · 惯性视角"
+                : explorer.epoch.label
+            }}
+          </h2>
+          <span class="scene-subtitle">{{
+            astronomy.view === "system"
+              ? astronomy.trueScale
+                ? "真实大小与距离比例"
+                : "距离压缩为 1/8 · 月球放大 3 倍"
+              : `${explorer.epoch.age} · ${explorer.layers.length} 个圈层 · 半径 ${explorer.radiusKm.toFixed(1)} km`
+          }}</span>
         </div>
-        <div class="scene-tag illustrative"><span />参数模型 · 教学示意</div>
+        <div class="scene-tag illustrative">
+          <span />{{
+            astronomy.view === "system"
+              ? "天体运动 · 解析近似"
+              : "参数模型 · 教学示意"
+          }}
+        </div>
         <div class="scene-toolbar">
           <button
             class="icon-button"
             aria-label="放大"
-            @click="viewport?.zoom('in')"
+            @click="activeViewport?.zoom('in')"
           >
             <Plus :size="18" /></button
           ><button
             class="icon-button"
             aria-label="缩小"
-            @click="viewport?.zoom('out')"
+            @click="activeViewport?.zoom('out')"
           >
             <Minus :size="18" /></button
           ><button
@@ -384,7 +458,7 @@ onBeforeUnmount(() => {
             @click="
               pause();
               stopNavigation();
-              viewport?.reset();
+              activeViewport?.reset();
             "
           >
             <RotateCcw :size="18" /></button
@@ -408,7 +482,7 @@ onBeforeUnmount(() => {
           <Compass :size="15" /><span>拖动旋转 · 滚轮缩放 · 点击探索</span>
         </div>
         <div
-          v-if="explorer.selection || landmark"
+          v-if="astronomy.view === 'moon' && (explorer.selection || landmark)"
           class="detail-card rich-detail"
         >
           <button
@@ -450,7 +524,10 @@ onBeforeUnmount(() => {
             <span class="inline-note">当前参数为教学示意</span></template
           >
         </div>
-        <div v-else-if="navigation === 'orbit'" class="moon-facts">
+        <div
+          v-else-if="navigation === 'orbit' && astronomy.view === 'moon'"
+          class="moon-facts"
+        >
           <div>
             <span>剖切方式</span
             ><strong class="fact-text">{{
@@ -468,30 +545,50 @@ onBeforeUnmount(() => {
         </div>
       </section>
     </main>
-    <section class="timeline-panel" aria-label="演化阶段">
-      <button
-        class="play-button"
-        :disabled="!ready"
-        :aria-label="playing ? '暂停演示' : '播放演示'"
-        @click="playback"
-      >
-        <Pause v-if="playing" :size="19" /><Play v-else :size="19" />
-      </button>
-      <div class="timeline-label">
-        <strong>演化场景</strong><small>切换会载入该阶段参数</small>
-      </div>
-      <div class="timeline-track">
+    <div class="time-dock">
+      <div class="time-mode-tabs" aria-label="时间轴类型">
         <button
-          v-for="(epoch, index) in epochs"
-          :key="epoch.id"
-          :class="{ active: explorer.epochIndex === index }"
-          @click="selectEpoch(index)"
+          :aria-pressed="astronomy.timelineMode === 'date'"
+          @click="
+            astronomy.timelineMode = 'date';
+            pause();
+          "
         >
-          <span class="timeline-node" /><strong>{{ epoch.age }}</strong
-          ><small>{{ epoch.label }}</small>
+          日期时间 · 天体运动
+        </button>
+        <button
+          :aria-pressed="astronomy.timelineMode === 'geology'"
+          @click="astronomy.timelineMode = 'geology'"
+        >
+          地质年代 · 内部演化
         </button>
       </div>
-    </section>
+      <AstroTimeline v-if="astronomy.timelineMode === 'date'" />
+      <section v-else class="timeline-panel" aria-label="演化阶段">
+        <button
+          class="play-button"
+          :disabled="!ready"
+          :aria-label="playing ? '暂停演示' : '播放演示'"
+          @click="playback"
+        >
+          <Pause v-if="playing" :size="19" /><Play v-else :size="19" />
+        </button>
+        <div class="timeline-label">
+          <strong>演化场景</strong><small>切换会载入该阶段参数</small>
+        </div>
+        <div class="timeline-track">
+          <button
+            v-for="(epoch, index) in epochs"
+            :key="epoch.id"
+            :class="{ active: explorer.epochIndex === index }"
+            @click="selectEpoch(index)"
+          >
+            <span class="timeline-node" /><strong>{{ epoch.age }}</strong
+            ><small>{{ epoch.label }}</small>
+          </button>
+        </div>
+      </section>
+    </div>
     <footer class="app-footer">
       <span>月见 · 月表与内部统一参数展示</span
       ><span>NASA / USGS · 现今数据与早期示意分开标注</span>
