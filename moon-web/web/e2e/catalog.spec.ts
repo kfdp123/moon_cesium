@@ -37,7 +37,8 @@ test("point create, edit, map picking, export, import and persistence", async ({
 }) => {
   await page.goto("/");
   await page.getByText("场景已就绪").waitFor();
-  await page.getByRole("button", { name: "点位管理", exact: true }).click();
+  await page.getByRole("button", { name: "科普探索", exact: true }).click();
+  await page.getByRole("button", { name: "资料管理", exact: true }).click();
   await page.getByRole("button", { name: "新增点位", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "编辑点位" });
   await dialog.getByLabel("名称", { exact: true }).fill("测试点位");
@@ -47,11 +48,9 @@ test("point create, edit, map picking, export, import and persistence", async ({
   await dialog.getByRole("button", { name: "保存点位", exact: true }).click();
   await page.reload();
   await page.getByText("场景已就绪").waitFor();
-  await page.getByRole("button", { name: "点位管理", exact: true }).click();
+  await page.getByRole("button", { name: "科普探索", exact: true }).click();
   await page.getByLabel("搜索点位", { exact: true }).fill("测试点位");
-  await page
-    .getByRole("button", { name: "测试点位 自定义", exact: true })
-    .click();
+  await page.locator(".point-title").first().click();
   await expect(
     page.getByRole("heading", { name: "测试点位", exact: true }),
   ).toBeVisible();
@@ -63,7 +62,8 @@ test("point create, edit, map picking, export, import and persistence", async ({
   await expect(
     page.getByRole("heading", { name: "测试点位", exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "点位管理", exact: true }).click();
+  await page.getByRole("button", { name: "科普探索", exact: true }).click();
+  await page.getByRole("button", { name: "资料管理", exact: true }).click();
   await page.getByLabel("搜索点位", { exact: true }).fill("测试点位");
   const exported = page.waitForEvent("download");
   await page.getByRole("button", { name: "导出", exact: true }).click();

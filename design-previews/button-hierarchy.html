@@ -1,0 +1,113 @@
+<div id="moon-button-study" aria-label="月球系统按钮设计预览">
+  <style>
+    #moon-button-study { --moon-accent: #73d9e7; --moon-round: 9px; color-scheme:dark; font:16px/1.5 "Microsoft YaHei",sans-serif; color:#edf3f8; background:#0b111c; padding:24px; border-radius:14px; }
+    #moon-button-study * { box-sizing:border-box; }
+    #moon-button-study button { font:inherit; cursor:pointer; min-height:44px; border:1px solid #48586c; border-radius:var(--moon-round); padding:10px 16px; color:#edf3f8; background:#243246; display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:background .15s,border-color .15s; }
+    #moon-button-study button:hover:not(:disabled) { background:#34465e; border-color:#8da4bc; }
+    #moon-button-study button:active:not(:disabled) { box-shadow:inset 0 2px 5px #0006; }
+    #moon-button-study button:focus-visible { outline:3px solid #e9f9ff; outline-offset:3px; }
+    #moon-button-study button:disabled { background:#17202e; color:#748195; border-color:#344052; cursor:default; }
+    #moon-button-study .moon-main { color:#08232b; background:var(--moon-accent); border-color:var(--moon-accent); font-weight:600; }
+    #moon-button-study .moon-main:hover { background:color-mix(in srgb,var(--moon-accent),white 18%); border-color:var(--moon-accent); }
+    #moon-button-study .moon-section { padding:0 0 24px; margin-bottom:24px; border-bottom:1px solid #2b384a; }
+    #moon-button-study .moon-label { margin:0 0 12px; color:#b6c3d4; font-size:14px; }
+    #moon-button-study .moon-row { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+    #moon-button-study .moon-segment { display:flex; flex-wrap:wrap; padding:5px; gap:5px; background:#111c2b; border-radius:12px; }
+    #moon-button-study .moon-segment button { flex:1; border-color:transparent; color:#b6c3d4; background:transparent; padding:10px 12px; white-space:nowrap; }
+    #moon-button-study .moon-segment button[aria-pressed="true"] { color:var(--moon-accent); background:#24394c; border-color:var(--moon-accent); box-shadow:inset 0 -3px var(--moon-accent); }
+    #moon-button-study .moon-chip { border-radius:24px; min-width:90px; background:#172333; }
+    #moon-button-study .moon-chip[aria-pressed="true"] { background:#2a4055; border-color:var(--moon-accent); }
+    #moon-button-study .moon-dot { width:9px; height:9px; border-radius:50%; background:var(--layer-color); }
+    #moon-button-study .moon-check { display:none; color:var(--moon-accent); }
+    #moon-button-study [aria-pressed="true"] .moon-check { display:inline; }
+    #moon-button-study .moon-tour { background:#152132; padding:18px; border:1px solid #39495d; border-radius:12px; }
+    #moon-button-study .moon-tour header { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+    #moon-button-study .moon-tour header strong { flex:1; }
+    #moon-button-study .moon-tour header span { color:#b6c3d4; }
+    #moon-button-study .moon-tour p { color:#c9d5e3; margin:0 0 18px; }
+    #moon-button-study .moon-quiet { background:transparent; border-color:transparent; padding:8px; }
+    #moon-button-study progress { display:block; width:100%; height:5px; margin:0 0 18px; accent-color:var(--moon-accent); }
+    #moon-button-study svg { width:19px; height:19px; }
+    @media(max-width:460px) { #moon-button-study { padding:16px; } #moon-button-study .moon-segment button { flex:1 1 40%; } #moon-button-study .moon-tour { padding:14px; } }
+    @media(prefers-reduced-motion:reduce) { #moon-button-study button { transition:none; } }
+  </style>
+  <div class="moon-section">
+    <p class="moon-label">场景导航</p>
+    <div class="moon-segment" role="group" aria-label="场景选中态预览">
+      <button type="button" aria-pressed="false"><i data-lucide="moon" aria-hidden="true"></i>月球探索</button>
+      <button type="button" aria-pressed="true"><i data-lucide="layers" aria-hidden="true"></i>内部与演化</button>
+      <button type="button" aria-pressed="false"><i data-lucide="footprints" aria-hidden="true"></i>月表漫游</button>
+      <button type="button" aria-pressed="false"><i data-lucide="orbit" aria-hidden="true"></i>地月运动</button>
+    </div>
+  </div>
+  <div class="moon-section">
+    <p class="moon-label">内部展台 · 操作与选择</p>
+    <div class="moon-row" style="margin-bottom:16px">
+      <button type="button" class="moon-main" data-expand aria-pressed="false"><i data-lucide="layers" aria-hidden="true"></i><span>分层展开</span></button>
+      <button type="button" data-overview><i data-lucide="scan" aria-hidden="true"></i>整体观察</button>
+    </div>
+    <div class="moon-row moon-layers" role="group" aria-label="圈层选中态预览">
+      <button type="button" class="moon-chip" aria-pressed="false"><span class="moon-dot" style="--layer-color:#c4b8a5"></span>月壳<span class="moon-check">✓</span></button>
+      <button type="button" class="moon-chip" aria-pressed="true"><span class="moon-dot" style="--layer-color:#db8b60"></span>月幔<span class="moon-check">✓</span></button>
+      <button type="button" class="moon-chip" aria-pressed="false"><span class="moon-dot" style="--layer-color:#eebd6b"></span>外核<span class="moon-check">✓</span></button>
+      <button type="button" class="moon-chip" aria-pressed="false"><span class="moon-dot" style="--layer-color:#f4da99"></span>内核<span class="moon-check">✓</span></button>
+    </div>
+  </div>
+  <section class="moon-tour" aria-label="讲解按钮预览">
+    <header><i data-lucide="grip-horizontal" aria-hidden="true"></i><strong data-title>从月表出发</strong><span data-count>1 / 3</span></header>
+    <p data-caption>先观察完整月球，再打开剖面。</p>
+    <progress max="3" value="1" aria-label="讲解步骤"></progress>
+    <div class="moon-row">
+      <button type="button" data-prev disabled><i data-lucide="chevron-left" aria-hidden="true"></i>上一步</button>
+      <button type="button" class="moon-main" data-play><i data-lucide="play" aria-hidden="true"></i><span>继续讲解</span></button>
+      <button type="button" data-next>下一步<i data-lucide="chevron-right" aria-hidden="true"></i></button>
+    </div>
+  </section>
+  <script>
+    (() => {
+      const root = document.getElementById('moon-button-study');
+      const design = { accent: 'cyan', rounded: 9 };
+      function renderDesign() {
+        root.style.setProperty('--moon-accent',design.accent === 'cyan' ? '#73d9e7' : '#9fddc5');
+        root.style.setProperty('--moon-round',design.rounded+'px');
+      }
+      renderDesign();
+      if(globalThis.Tweak) {
+        const tweak = new Tweak({container:root,onChange:renderDesign});
+        tweak.addSelect(design,'accent',{label:'强调色',options:[{label:'冰蓝',value:'cyan'},{label:'月青',value:'jade'}]});
+        tweak.addSlider(design,'rounded',{label:'按钮圆角',min:6,max:14,unit:'px'});
+      }
+      for(const group of root.querySelectorAll('.moon-segment,.moon-layers')) {
+        group.addEventListener('click',event=>{
+          const target=event.target.closest('button'); if(!target) return;
+          group.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(button===target)));
+        });
+      }
+      const expand=root.querySelector('[data-expand]');
+      expand.addEventListener('click',()=>{
+        const expanded=expand.getAttribute('aria-pressed')!=='true';
+        expand.setAttribute('aria-pressed',String(expanded));
+        expand.querySelector('span').textContent=expanded?'合拢圈层':'分层展开';
+      });
+      root.querySelector('[data-overview]').addEventListener('click',()=>root.querySelectorAll('.moon-layers button').forEach(button=>button.setAttribute('aria-pressed','false')));
+      let step=0, playing=false;
+      const steps=[['从月表出发','先观察完整月球，再打开剖面。'],['打开月球','通过剖面观察不同圈层的厚度与位置。'],['分层观察','展开圈层，比较月壳、月幔与月核。']];
+      function renderStep(){
+        root.querySelector('[data-title]').textContent=steps[step][0];
+        root.querySelector('[data-caption]').textContent=steps[step][1];
+        root.querySelector('[data-count]').textContent=(step+1)+' / 3';
+        root.querySelector('progress').value=step+1;
+        root.querySelector('[data-prev]').disabled=step===0;
+        root.querySelector('[data-next]').disabled=step===steps.length-1;
+      }
+      root.querySelector('[data-prev]').addEventListener('click',()=>{step--;renderStep();});
+      root.querySelector('[data-next]').addEventListener('click',()=>{step++;renderStep();});
+      root.querySelector('[data-play]').addEventListener('click',()=>{
+        playing=!playing;
+        const button=root.querySelector('[data-play]');
+        button.innerHTML='<i data-lucide="'+(playing?'pause':'play')+'" aria-hidden="true"></i><span>'+(playing?'暂停讲解':'继续讲解')+'</span>';
+        if(globalThis.lucide) lucide.createIcons();
+      });
+    })();
+  </script>
+</div>

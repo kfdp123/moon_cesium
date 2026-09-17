@@ -1,5 +1,13 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref, watch } from "vue";
+import {
+  ChevronLeft,
+  ChevronRight,
+  GripHorizontal,
+  Pause,
+  Play,
+  X,
+} from "@lucide/vue";
 import { useEvolutionTour } from "../stores/evolutionTour";
 import { evolutionDuration, evolutionSteps } from "../data/evolutionTour";
 const tour = useEvolutionTour();
@@ -9,9 +17,16 @@ const dragging = ref(false);
 let drag: { id: number; dx: number; dy: number } | undefined;
 function place(x: number, y: number) {
   const box = panel.value!.getBoundingClientRect();
+  // Keep the controls above the persistent timeline, including after a resize.
+  const timeSpace = parseFloat(
+    getComputedStyle(panel.value!).getPropertyValue("--time-space"),
+  );
   position.value = {
     x: Math.max(8, Math.min(x, window.innerWidth - box.width - 8)),
-    y: Math.max(8, Math.min(y, window.innerHeight - box.height - 8)),
+    y: Math.max(
+      8,
+      Math.min(y, window.innerHeight - timeSpace - box.height - 12),
+    ),
   };
 }
 function keepInView() {
@@ -91,10 +106,13 @@ onBeforeUnmount(() => {
         @pointercancel="endDrag"
         @lostpointercapture="endDrag"
       >
+        <GripHorizontal :size="20" aria-hidden="true" />
         <strong>{{ tour.step.title }}</strong
         ><span>{{ tour.index + 1 }} / {{ evolutionSteps.length }}</span>
       </div>
-      <button aria-label="结束讲解" @click="tour.stop">×</button>
+      <button class="icon-button" aria-label="结束讲解" @click="tour.stop">
+        <X :size="20" aria-hidden="true" />
+      </button>
     </div>
     <p>{{ tour.step.caption }}</p>
     <progress
@@ -103,21 +121,35 @@ onBeforeUnmount(() => {
       aria-label="讲解进度"
     />
     <div class="tour-actions">
-      <button :disabled="tour.index === 0" @click="tour.move(-1)">
+      <button
+        class="secondary-button"
+        :disabled="tour.index === 0"
+        @click="tour.move(-1)"
+      >
+        <ChevronLeft :size="18" aria-hidden="true" />
         上一步
       </button>
-      <button @click="tour.playing ? tour.pause() : tour.resume()">
+      <button
+        class="primary-button"
+        @click="tour.playing ? tour.pause() : tour.resume()"
+      >
+        <Pause v-if="tour.playing" :size="18" aria-hidden="true" /><Play
+          v-else
+          :size="18"
+          aria-hidden="true"
+        />
         {{
           tour.playing ? "暂停讲解" : tour.finished ? "重新讲解" : "继续讲解"
         }}
       </button>
       <button
+        class="secondary-button"
         :disabled="tour.index === evolutionSteps.length - 1"
         @click="tour.move(1)"
       >
         下一步
+        <ChevronRight :size="18" aria-hidden="true" />
       </button>
-      <small>过程示意</small>
     </div>
   </section>
 </template>

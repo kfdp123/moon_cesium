@@ -3,9 +3,9 @@ import type { Epoch, MoonLayer } from "../types";
 export const MOON_RADIUS_KM = 1737.4;
 export const MOON_RADIUS_M = MOON_RADIUS_KM * 1000;
 
-// Texture orientation and data credit are documented in public/assets/README.md.
+// Texture orientation and credits: public/assets/lroc_color_8k.source.md.
 export const SURFACE_TEXTURE_URL =
-  import.meta.env.VITE_MOON_TEXTURE_URL || "/assets/lroc_color_2k.jpg";
+  import.meta.env.VITE_MOON_TEXTURE_URL || "/assets/lroc_color_8k.jpg";
 
 const layerDescriptions = {
   crust: {

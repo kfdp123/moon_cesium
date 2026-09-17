@@ -1,0 +1,100 @@
+[
+  {
+    "id": "apollo11",
+    "description": "1969 年首次载人登月任务的着陆位置，位于静海。照片为 NASA/JSC 的任务历史照片；登月舱模型由 NASA/Michael D. Carbajal 提供，不是现场三维扫描。",
+    "images": [
+      {
+        "title": "阿波罗 11 号登月舱与奥尔德林 · NASA/JSC",
+        "url": "/assets/apollo11.jpg"
+      }
+    ],
+    "references": [
+      {
+        "title": "NASA · Apollo by the Numbers",
+        "url": "https://www.nasa.gov/wp-content/uploads/2023/04/sp-4029.pdf"
+      },
+      {
+        "title": "LROC 人工目标坐标表（2016）",
+        "url": "https://www.lroc.asu.edu/data/support/downloads/2016_LROC_Coordinates_of_Human_Features.pdf"
+      }
+    ],
+    "links": [
+      {
+        "title": "NASA 登月舱模型及署名",
+        "url": "https://science.nasa.gov/3d-resources/apollo-lunar-module/"
+      }
+    ]
+  },
+  {
+    "id": "yutu",
+    "description": "坐标由 LROC 科学团队发布，采用月球 ME 参考系。位置来自 2016 年目标目录；巡视器记录位置不是实时位置。",
+    "images": [],
+    "references": [
+      {
+        "title": "LROC 人工目标坐标表（2016）",
+        "url": "https://www.lroc.asu.edu/data/support/downloads/2016_LROC_Coordinates_of_Human_Features.pdf"
+      }
+    ],
+    "links": []
+  },
+  {
+    "id": "change3",
+    "description": "坐标由 LROC 科学团队发布，采用月球 ME 参考系。位置来自 2016 年目标目录；巡视器记录位置不是实时位置。",
+    "images": [],
+    "references": [
+      {
+        "title": "LROC 人工目标坐标表（2016）",
+        "url": "https://www.lroc.asu.edu/data/support/downloads/2016_LROC_Coordinates_of_Human_Features.pdf"
+      }
+    ],
+    "links": []
+  },
+  {
+    "id": "usgs-1296",
+    "description": "Copernicus，IAU 命名月球环形山。目录直径约 96.1 km。命名来源（USGS 原文）：Nicholas; Polish astronomer (1473-1543).。点表示地貌中心，不表示边界。",
+    "images": [],
+    "references": [],
+    "links": [
+      {
+        "title": "USGS / IAU 地名记录",
+        "url": "https://planetarynames.wr.usgs.gov/Feature/1296"
+      }
+    ]
+  },
+  {
+    "id": "usgs-3691",
+    "description": "Mare Tranquillitatis，IAU 命名月球月海。目录直径约 875.7 km。命名来源（USGS 原文）：\"Sea of Tranquility.\"。点表示地貌中心，不表示边界。",
+    "images": [],
+    "references": [],
+    "links": [
+      {
+        "title": "USGS / IAU 地名记录",
+        "url": "https://planetarynames.wr.usgs.gov/Feature/3691"
+      }
+    ]
+  },
+  {
+    "id": "usgs-6163",
+    "description": "Tycho，IAU 命名月球环形山。目录直径约 85.3 km。命名来源（USGS 原文）：Tycho Brahe; Danish astronomer (1546-1601).。点表示地貌中心，不表示边界。",
+    "images": [],
+    "references": [],
+    "links": [
+      {
+        "title": "USGS / IAU 地名记录",
+        "url": "https://planetarynames.wr.usgs.gov/Feature/6163"
+      }
+    ]
+  },
+  {
+    "id": "usgs-3678",
+    "description": "Mare Imbrium，IAU 命名月球月海。目录直径约 1145.5 km。命名来源（USGS 原文）：\"Sea of Showers.\"。点表示地貌中心，不表示边界。",
+    "images": [],
+    "references": [],
+    "links": [
+      {
+        "title": "USGS / IAU 地名记录",
+        "url": "https://planetarynames.wr.usgs.gov/Feature/3678"
+      }
+    ]
+  }
+]

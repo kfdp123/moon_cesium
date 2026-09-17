@@ -16,6 +16,23 @@ test("evolution guide supports pause, all phases, manual selection and exit", as
   const paused = await progress.getAttribute("value");
   await page.waitForTimeout(600);
   await expect(progress).toHaveAttribute("value", paused!);
+  const handle = await tour.locator(".tour-drag-handle").boundingBox();
+  const before = await tour.boundingBox();
+  await page.mouse.move(handle!.x + 60, handle!.y + 15);
+  await page.mouse.down();
+  await page.mouse.move(handle!.x + 180, handle!.y - 65, { steps: 8 });
+  await page.mouse.up();
+  expect((await tour.boundingBox())!.x).toBeCloseTo(before!.x + 120, 0);
+  await page.setViewportSize({ width: 390, height: 900 });
+  await expect
+    .poll(async () => {
+      const panel = (await tour.boundingBox())!;
+      const timeline = (await page.locator(".floating-time").boundingBox())!;
+      return panel.y + panel.height <= timeline.y;
+    })
+    .toBe(true);
+  await page.screenshot({ path: "test-results/buttons-tour-narrow.png" });
+  await page.setViewportSize({ width: 1600, height: 1000 });
   await tour.getByRole("button", { name: "继续讲解", exact: true }).click();
   for (let step = 1; step <= 7; step++) {
     await tour.getByRole("button", { name: "下一步", exact: true }).click();

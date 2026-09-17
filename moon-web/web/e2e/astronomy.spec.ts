@@ -27,6 +27,12 @@ test("native timeline controls one clock across lunar rotation and Earth orbit v
   await page.getByText("场景已就绪").waitFor();
   await page.getByRole("button", { name: "展开时间轴", exact: true }).click();
   await setDate(page, "2026-09-15T12:00");
+  for (const span of ["1", "365", "30"]) {
+    await page.getByLabel("时间轴跨度", { exact: true }).selectOption(span);
+    const labels = page.locator(".cesium-timeline-ticLabel");
+    await expect(labels.first()).toContainText(/\d+年\d+月\d+日/);
+    expect((await labels.allTextContents()).join(" ")).not.toMatch(/[A-Za-z]/);
+  }
   await page.getByRole("button", { name: "前进一天", exact: true }).click();
   await expect(page.getByLabel("模拟日期 UTC", { exact: true })).toHaveValue(
     "2026-09-16T12:00",

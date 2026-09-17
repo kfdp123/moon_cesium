@@ -19,6 +19,7 @@ import {
   PolylineCollection,
   Primitive,
   SkyAtmosphere,
+  SkyBox,
   Credit,
   Viewer,
 } from "cesium";
@@ -37,6 +38,7 @@ export class OrbitalScene {
   private lines: PolylineCollection;
   private removeTick: () => void;
   private trueScale = false;
+  private followingMoon = false;
   private lastTime: JulianDate | undefined;
   private pathDate: JulianDate | undefined;
   constructor(
@@ -69,6 +71,8 @@ export class OrbitalScene {
       contextOptions: { webgl: { preserveDrawingBuffer: true } },
     });
     this.viewer.resolutionScale = Math.min(window.devicePixelRatio, 1.5);
+    // Add only the star background; the app manages celestial bodies itself.
+    this.viewer.scene.skyBox = SkyBox.createEarthSkyBox();
     this.viewer.scene.backgroundColor = Color.fromCssColorString("#080f19");
     this.viewer.scene.light = new DirectionalLight({
       direction: new Cartesian3(-1, 0, 0),
@@ -169,6 +173,14 @@ export class OrbitalScene {
       moonScale,
       new Matrix4(),
     );
+    if (this.followingMoon) {
+      // Translate with the Moon while retaining the user's orbit and zoom.
+      const camera = this.viewer.camera;
+      camera.lookAtTransform(
+        Matrix4.fromTranslation(moonPosition),
+        Cartesian3.clone(camera.position),
+      );
+    }
     this.earth.modelMatrix = Matrix4.fromRotationTranslation(
       earthToInertial(time),
     );
@@ -220,6 +232,7 @@ export class OrbitalScene {
     this.lastTime = JulianDate.clone(time);
   }
   reset() {
+    this.releaseFocus();
     this.viewer.camera.lookAt(
       Cartesian3.ZERO,
       new HeadingPitchRange(0, -0.75, this.trueScale ? 1.3e9 : 1.65e8),
@@ -228,8 +241,20 @@ export class OrbitalScene {
     this.viewer.scene.requestRender();
   }
   focusEarth() {
+    this.focusBody("earth");
+  }
+  focusMoon() {
+    this.focusBody("moon");
+  }
+  private focusBody(body: "earth" | "moon") {
+    this.releaseFocus();
+    this.update(true);
+    const isMoon = body === "moon";
+    const radius = isMoon
+      ? 1737400 * (this.trueScale ? 1 : 3)
+      : Ellipsoid.WGS84.maximumRadius;
     const sun = lunarEphemeris(this.viewer.clock.currentTime).sun;
-    // A sunward, slightly oblique approach exposes continents and the day/night edge.
+    // Approach from the lit side, with an oblique view of the day/night edge.
     const direction = Matrix3.multiplyByVector(
       Matrix3.fromRotationZ(0.45),
       Cartesian3.normalize(sun, new Cartesian3()),
@@ -237,28 +262,53 @@ export class OrbitalScene {
     );
     direction.z += 0.2;
     Cartesian3.normalize(direction, direction);
-    const destination = Cartesian3.multiplyByScalar(
+    const offset = Cartesian3.multiplyByScalar(
       direction,
-      2.25e7,
+      isMoon ? radius * 3.5 : 2.25e7,
       new Cartesian3(),
     );
+    const center = isMoon
+      ? Matrix4.getTranslation(this.moon.modelMatrix, new Cartesian3())
+      : Cartesian3.ZERO;
     const look = Cartesian3.negate(direction, new Cartesian3());
     const right = Cartesian3.normalize(
       Cartesian3.cross(look, Cartesian3.UNIT_Z, new Cartesian3()),
       new Cartesian3(),
     );
+    this.viewer.scene.screenSpaceCameraController.minimumZoomDistance = isMoon
+      ? radius * 1.15
+      : 7e6;
     this.viewer.camera.flyTo({
-      destination,
+      destination: Cartesian3.add(center, offset, new Cartesian3()),
       orientation: {
         direction: look,
         up: Cartesian3.cross(right, look, new Cartesian3()),
       },
       duration: 0.8,
+      complete: () => {
+        if (!isMoon) return;
+        this.followingMoon = true;
+        const currentCenter = Matrix4.getTranslation(
+          this.moon.modelMatrix,
+          new Cartesian3(),
+        );
+        this.viewer.camera.lookAtTransform(
+          Matrix4.fromTranslation(currentCenter),
+          offset,
+        );
+        this.viewer.scene.requestRender();
+      },
     });
     this.viewer.scene.requestRender();
   }
+  private releaseFocus() {
+    this.followingMoon = false;
+    this.viewer.camera.cancelFlight();
+    this.viewer.camera.lookAtTransform(Matrix4.IDENTITY);
+    this.viewer.scene.screenSpaceCameraController.minimumZoomDistance = 7e6;
+  }
   zoom(direction: "in" | "out") {
-    const amount = Cartesian3.magnitude(this.viewer.camera.positionWC) * 0.15;
+    const amount = Cartesian3.magnitude(this.viewer.camera.position) * 0.15;
     if (direction === "in") this.viewer.camera.zoomIn(amount);
     else this.viewer.camera.zoomOut(amount);
     this.viewer.scene.requestRender();

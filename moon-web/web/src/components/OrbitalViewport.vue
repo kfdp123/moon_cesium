@@ -56,6 +56,7 @@ onBeforeUnmount(() => {
 defineExpose({
   reset: () => scene?.reset(),
   focusEarth: () => scene?.focusEarth(),
+  focusMoon: () => scene?.focusMoon(),
   zoom: (direction: "in" | "out") => scene?.zoom(direction),
   capture: () => scene?.capture(),
 });

@@ -1,222 +1,161 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
+import {
+  ArrowLeft,
+  ArrowUpRight,
+  CircleDot,
+  Orbit,
+  Rocket,
+  Search,
+  Settings2,
+  Truck,
+} from "@lucide/vue";
 import { useCatalog } from "../stores/catalog";
-import { downloadJson, parsePoints, pointsGeoJson } from "../data/pointFiles";
-import type { LunarPoint } from "../types";
-import ResourceEditor from "./ResourceEditor.vue";
+import { curatedPointIds, pointStories } from "../data/pointStories";
+import PointManagement from "./PointManagement.vue";
+
 const catalog = useCatalog();
 const emit = defineEmits<{ locate: [id: string] }>();
+const managementOpen = ref(false);
 const query = ref("");
-const category = ref("");
+const category = ref("精选");
 const page = ref(0);
-const error = ref("");
-const edit = ref<LunarPoint>();
+const pageSize = 18;
 const categories = computed(() => [
-  ...new Set(catalog.points.map((p) => p.category)),
+  "精选",
+  "全部",
+  ...new Set(catalog.points.map((point) => point.category)),
 ]);
-const filtered = computed(() =>
-  catalog.points.filter(
-    (p) =>
-      (!category.value || p.category === category.value) &&
-      p.name.toLowerCase().includes(query.value.toLowerCase()),
-  ),
-);
+const filtered = computed(() => {
+  const search = query.value.trim().toLowerCase();
+  const selected = catalog.points.filter(
+    (point) =>
+      (!search ||
+        `${point.name} ${point.description}`.toLowerCase().includes(search)) &&
+      (category.value === "全部" ||
+        category.value === "精选" ||
+        point.category === category.value),
+  );
+  if (category.value === "精选" && !search) {
+    return curatedPointIds.flatMap(
+      (id) => selected.find((point) => point.id === id) ?? [],
+    );
+  }
+  return selected.sort(
+    (a, b) =>
+      Number(b.name.toLowerCase().includes(search)) -
+        Number(a.name.toLowerCase().includes(search)) ||
+      Number(Boolean(pointStories[b.id])) - Number(Boolean(pointStories[a.id])),
+  );
+});
 const visible = computed(() =>
-  filtered.value.slice(page.value * 20, (page.value + 1) * 20),
+  filtered.value.slice(page.value * pageSize, (page.value + 1) * pageSize),
 );
-function create() {
-  edit.value = {
-    id: crypto.randomUUID(),
-    name: "",
-    category: "自定义",
-    longitude: 0,
-    latitude: 0,
-    description: "",
-    source: "",
-    visible: true,
-    images: [],
-    modelUrl: "",
-    references: [],
-    links: [],
-  };
-}
-function modify(point: LunarPoint) {
-  edit.value = JSON.parse(JSON.stringify(point));
-  error.value = "";
-}
-function save() {
-  try {
-    catalog.upsertPoint(edit.value!);
-    edit.value = undefined;
-    error.value = "";
-  } catch (cause) {
-    error.value = String(cause);
-  }
-}
-async function importFile(event: Event) {
-  const file = (event.target as HTMLInputElement).files?.[0];
-  if (!file) return;
-  try {
-    const incoming = parsePoints(JSON.parse(await file.text()));
-    const merged = new Map(catalog.points.map((p) => [p.id, p]));
-    for (const point of incoming) merged.set(point.id, point);
-    catalog.points = [...merged.values()];
-    catalog.savePoints();
-    error.value = "";
-  } catch (cause) {
-    error.value = String(cause);
-  }
-  (event.target as HTMLInputElement).value = "";
-}
-function toggle(point: LunarPoint) {
-  point.visible = !point.visible;
-  try {
-    catalog.savePoints();
-  } catch (cause) {
-    error.value = String(cause);
-  }
+const pageCount = computed(() =>
+  Math.max(1, Math.ceil(filtered.value.length / pageSize)),
+);
+watch([query, category], () => {
+  page.value = 0;
+});
+function categoryIcon(value: string) {
+  if (value === "着陆点") return Rocket;
+  if (value === "巡视器") return Truck;
+  if (value === "月海") return Orbit;
+  return CircleDot;
 }
 </script>
+
 <template>
-  <section class="panel-section">
-    <div class="section-label">
-      科普点位 <small>{{ catalog.points.length }} 个</small>
-    </div>
-    <input
-      class="search-input"
-      aria-label="搜索点位"
-      placeholder="搜索名称，如 Tycho、静海"
-      v-model="query"
-      @input="page = 0"
-    />
-    <label class="field"
-      >类别<select v-model="category" @change="page = 0">
-        <option value="">全部类别</option>
-        <option v-for="value in categories" :key="value">{{ value }}</option>
-      </select></label
-    >
-    <div class="compact-row">
-      <button class="secondary-button" @click="create">新增点位</button
-      ><button
-        @click="
-          downloadJson('moon-points.geojson', pointsGeoJson(catalog.points))
-        "
-      >
-        导出
-      </button>
-    </div>
-    <details class="catalog-import">
-      <summary>导入与数据说明</summary>
-      <label class="file-label"
-        >导入 GeoJSON<input
-          type="file"
-          accept=".geojson,.json"
-          @change="importFile"
-      /></label>
-      <p class="panel-note">
-        月球东经为正、纬度为行星心纬度。修改保存在本浏览器；导出可备份或分享。目录默认只显示精选点位。
-      </p>
-    </details>
-    <div v-for="point in visible" :key="point.id" class="point-row">
-      <input
-        type="checkbox"
-        :checked="point.visible"
-        :aria-label="`显示${point.name}`"
-        @change="toggle(point)"
-      />
-      <button class="point-title" @click="emit('locate', point.id)">
-        {{ point.name }}<small>{{ point.category }}</small>
-      </button>
-      <button @click="modify(point)" :aria-label="`编辑${point.name}`">
-        编辑
-      </button>
-    </div>
-    <div class="compact-row">
-      <button :disabled="page === 0" @click="page--">上一页</button
-      ><small
-        >{{ page + 1 }} /
-        {{ Math.max(1, Math.ceil(filtered.length / 20)) }}</small
-      ><button :disabled="(page + 1) * 20 >= filtered.length" @click="page++">
-        下一页
-      </button>
-    </div>
-    <button class="text-button" @click="catalog.restorePoints()">
-      恢复内置目录（覆盖本地修改）
-    </button>
-    <a
-      class="text-button"
-      href="https://planetarynames.wr.usgs.gov/GIS_Downloads"
-      target="_blank"
-      rel="noreferrer"
-      >下载 USGS 完整矢量数据 ↗</a
-    >
-    <p v-if="error || catalog.error" class="form-error" role="alert">
-      {{ error || catalog.error }}
-    </p>
-  </section>
-  <Teleport to="body"
-    ><div v-if="edit" class="modal-backdrop" @click.self="edit = undefined">
-      <form
-        class="modal point-editor"
-        role="dialog"
-        aria-modal="true"
-        aria-label="编辑点位"
-        @submit.prevent="save"
-      >
-        <button type="button" class="modal-close" @click="edit = undefined">
-          关闭
+  <div class="science-browser">
+    <template v-if="!managementOpen">
+      <div class="science-browser-heading">
+        <span>从足迹，读懂月球</span>
+        <button class="science-manage-button" @click="managementOpen = true">
+          <Settings2 :size="17" />资料管理
         </button>
-        <h2>点位资料</h2>
-        <label class="field">名称<input v-model="edit.name" required /></label
-        ><label class="field">类别<input v-model="edit.category" /></label>
-        <div class="compact-row">
-          <label class="field"
-            >东经 / °<input
-              type="number"
-              v-model.number="edit.longitude"
-              min="-180"
-              max="180"
-              step="any"
-              required /></label
-          ><label class="field"
-            >纬度 / °<input
-              type="number"
-              v-model.number="edit.latitude"
-              min="-90"
-              max="90"
-              step="any"
-              required
-          /></label>
-        </div>
-        <label class="field"
-          >文字介绍<textarea v-model="edit.description" rows="4" /></label
-        ><label class="field"
-          >数据来源<input v-model="edit.source" placeholder="https://…"
-        /></label>
-        <ResourceEditor title="图片" v-model="edit.images" /><label
-          class="field"
-          >模型地址（GLB / glTF）<input
-            v-model="edit.modelUrl"
-            placeholder="https://…/model.glb"
-        /></label>
-        <ResourceEditor title="文献" v-model="edit.references" /><ResourceEditor
-          title="相关链接"
-          v-model="edit.links"
+      </div>
+      <label class="science-search">
+        <Search :size="18" />
+        <input
+          v-model="query"
+          aria-label="搜索点位"
+          placeholder="搜索月海、环形山、探测任务"
         />
-        <p v-if="error" role="alert" class="form-error">{{ error }}</p>
-        <div class="compact-row">
-          <button class="primary-button" type="submit">保存点位</button
-          ><button
-            type="button"
-            @click="
-              catalog.removePoint(edit.id);
-              edit = undefined;
-            "
+      </label>
+      <div class="science-categories" aria-label="点位类别">
+        <button
+          v-for="value in categories"
+          :key="value"
+          :class="{ active: category === value }"
+          :aria-pressed="category === value"
+          @click="category = value"
+        >
+          {{ value }}
+        </button>
+      </div>
+      <div class="science-browser-count">
+        <strong>{{
+          category === "精选" && !query
+            ? "值得一看的月球现场"
+            : `${filtered.length} 处探索目标`
+        }}</strong>
+      </div>
+      <div class="science-point-list">
+        <button
+          v-for="point in visible"
+          :key="point.id"
+          class="science-point-card point-title"
+          @click="emit('locate', point.id)"
+        >
+          <span
+            class="science-point-image"
+            :class="{ 'has-image': point.images.length }"
           >
-            删除点位
-          </button>
-        </div>
-      </form>
-    </div></Teleport
-  >
+            <img
+              v-if="point.images.length"
+              :src="point.images[0]!.url"
+              :alt="point.images[0]!.title"
+              loading="lazy"
+            />
+            <component
+              :is="categoryIcon(point.category)"
+              v-else
+              :size="28"
+              :stroke-width="1.4"
+            />
+          </span>
+          <span class="science-point-copy">
+            <small>{{ point.category }}</small>
+            <strong>{{ point.name }}</strong>
+            <span v-if="pointStories[point.id]" class="science-point-hook">{{
+              pointStories[point.id]!.kicker
+            }}</span>
+          </span>
+          <ArrowUpRight :size="18" class="science-point-arrow" />
+        </button>
+      </div>
+      <p v-if="!visible.length" class="science-no-results">
+        没有找到匹配的地点
+      </p>
+      <div v-if="pageCount > 1" class="science-pagination">
+        <button class="secondary-button" :disabled="page === 0" @click="page--">
+          上一页
+        </button>
+        <span>{{ page + 1 }} / {{ pageCount }}</span>
+        <button
+          class="secondary-button"
+          :disabled="page + 1 >= pageCount"
+          @click="page++"
+        >
+          下一页
+        </button>
+      </div>
+    </template>
+    <template v-else>
+      <button class="science-back-button" @click="managementOpen = false">
+        <ArrowLeft :size="18" />返回科普探索
+      </button>
+      <PointManagement @locate="emit('locate', $event)" />
+    </template>
+  </div>
 </template>

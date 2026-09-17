@@ -1,0 +1,91 @@
+.point-hover {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  width: 270px;
+  display: flex;
+  overflow: hidden;
+  background: #101f2bf5;
+  border: 1px solid #789fac80;
+  border-radius: 12px;
+  box-shadow: 0 14px 32px #0007;
+}
+.point-hover img {
+  width: 82px;
+  object-fit: cover;
+}
+.point-hover > div {
+  padding: 12px;
+}
+.point-hover span {
+  display: block;
+  color: #79d9d4;
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+.point-hover strong {
+  display: block;
+  color: #eef6fb;
+  font-size: 16px;
+}
+.point-hover p {
+  margin: 7px 0 0;
+  font-size: 13px;
+  color: #afc1ce;
+  line-height: 1.5;
+}
+.exploration-return,
+.exploration-tour {
+  position: absolute;
+  z-index: 4;
+  left: calc(var(--edge) + var(--tool-offset));
+  bottom: calc(var(--time-space) + 18px);
+}
+.exploration-return {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  background: #122633eb;
+  padding: 12px 18px;
+}
+.exploration-tour {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #557e9380;
+  border-radius: 16px;
+  background: #122333f5;
+  box-shadow: 0 12px 40px #0006;
+}
+.exploration-tour > div {
+  min-width: 130px;
+  padding: 0 12px 0 4px;
+}
+.exploration-tour span,
+.exploration-tour strong {
+  display: block;
+}
+.exploration-tour span {
+  color: #9bb3c3;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+.exploration-tour strong {
+  font-size: 18px;
+}
+.exploration-tour .primary-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+@media (max-width: 760px) {
+  .exploration-tour {
+    max-width: calc(100vw - 106px);
+    gap: 2px;
+  }
+  .exploration-tour > div {
+    min-width: 90px;
+    padding-right: 0;
+  }
+}

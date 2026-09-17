@@ -38,9 +38,23 @@ export class SurfaceNavigation {
     orientation: { direction: Cartesian3; up: Cartesian3 };
   };
   private removeTick: () => void;
+  private readonly focusCanvas = () => {
+    if (this.mode !== "orbit")
+      this.viewer.canvas.focus({ preventScroll: true });
+  };
   private readonly keydown = (event: KeyboardEvent) => {
-    if (this.mode === "orbit" || document.activeElement !== this.viewer.canvas)
+    if (this.mode === "orbit") return;
+    const target = event.target as HTMLElement;
+    if (
+      target.closest(
+        "input, textarea, select, [contenteditable], [role=slider]",
+      )
+    )
       return;
+    const onCanvas = document.activeElement === this.viewer.canvas;
+    const roverControls =
+      this.mode === "rover" && Boolean(target.closest(".rover-controls"));
+    if (!onCanvas && !roverControls) return;
     if (
       [
         "KeyW",
@@ -66,7 +80,8 @@ export class SurfaceNavigation {
     this.originalNear = viewer.camera.frustum.near;
     viewer.canvas.tabIndex = 0;
     viewer.scene.primitives.add(this.models);
-    viewer.canvas.addEventListener("keydown", this.keydown);
+    window.addEventListener("keydown", this.keydown);
+    viewer.canvas.addEventListener("pointerdown", this.focusCanvas);
     window.addEventListener("keyup", this.keyup);
     window.addEventListener("blur", this.blur);
     viewer.canvas.addEventListener("blur", this.blur);
@@ -349,7 +364,8 @@ export class SurfaceNavigation {
     this.clear();
     this.viewer.scene.primitives.remove(this.models);
     this.removeTick();
-    this.viewer.canvas.removeEventListener("keydown", this.keydown);
+    window.removeEventListener("keydown", this.keydown);
+    this.viewer.canvas.removeEventListener("pointerdown", this.focusCanvas);
     this.viewer.canvas.removeEventListener("blur", this.blur);
     window.removeEventListener("keyup", this.keyup);
     window.removeEventListener("blur", this.blur);

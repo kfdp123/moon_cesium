@@ -20,9 +20,8 @@ import {
   PrimitiveCollection,
   PrimitiveType,
   ScreenSpaceEventType,
+  SkyBox,
   Viewer,
-  VerticalOrigin,
-  DistanceDisplayCondition,
   Clock,
   ClockViewModel,
 } from "cesium";
@@ -32,6 +31,7 @@ import type {
   NavigationMode,
   SceneSelection,
   SceneState,
+  LunarPoint,
 } from "../types";
 import { buildShell, type ShellMesh } from "./shellGeometry";
 import { MapLayers } from "./MapLayers";
@@ -40,6 +40,8 @@ import { LunarLighting, type LightingOptions } from "./LunarLighting";
 import { interiorAppearance } from "./interiorAppearance";
 import { InteriorExhibit } from "./InteriorExhibit";
 import { LunarEvolution } from "./LunarEvolution";
+import { PointModelLayer, type PointModelState } from "./PointModelLayer";
+import { PointFeatureLayer, type PointHover } from "./PointFeatureLayer";
 
 function geometry(mesh: ShellMesh): Geometry {
   const attributes = new GeometryAttributes();
@@ -80,6 +82,8 @@ export class MoonScene {
   private readonly overlayIds: string[] = [];
   private readonly exhibit: InteriorExhibit;
   private readonly evolution: LunarEvolution;
+  private readonly pointModels: PointModelLayer;
+  private readonly pointFeatures: PointFeatureLayer;
 
   constructor(
     container: HTMLElement,
@@ -87,6 +91,8 @@ export class MoonScene {
     reportLayer: (id: string, status: string) => void,
     reportError: (message: string) => void,
     clock: Clock,
+    reportPointModel: (state: PointModelState | null) => void,
+    reportHover: (hover: PointHover | null) => void = () => {},
   ) {
     Ellipsoid.default = Ellipsoid.MOON;
     this.clockModel = new ClockViewModel(clock);
@@ -115,7 +121,10 @@ export class MoonScene {
       contextOptions: { webgl: { preserveDrawingBuffer: true } },
     });
     const { scene } = this.viewer;
+    // Add only the star background; the app manages celestial bodies itself.
+    scene.skyBox = SkyBox.createEarthSkyBox();
     scene.backgroundColor = Color.fromCssColorString("#090e15");
+    scene.fog.renderable = false;
     scene.light = new DirectionalLight({
       direction: new Cartesian3(-1, -0.5, -0.35),
       intensity: 1.8,
@@ -131,6 +140,8 @@ export class MoonScene {
     this.lighting = new LunarLighting(this.viewer);
     this.exhibit = new InteriorExhibit(this.viewer, this.layerPrimitives);
     this.evolution = new LunarEvolution(this.viewer, this.layerPrimitives);
+    this.pointModels = new PointModelLayer(this.viewer, reportPointModel);
+    this.pointFeatures = new PointFeatureLayer(this.viewer);
     this.viewer.screenSpaceEventHandler.removeInputAction(
       ScreenSpaceEventType.LEFT_DOUBLE_CLICK,
     );
@@ -144,11 +155,27 @@ export class MoonScene {
         }
         if (id.startsWith("layer:"))
           onSelection({ kind: "layer", id: id.slice(6) });
-        else if (id.startsWith("landmark:"))
-          onSelection({ kind: "landmark", id: id.slice(9) });
-        else onSelection(null);
+        else if (this.pointFeatures.pointId(id)) {
+          const pointId = this.pointFeatures.pointId(id)!;
+          onSelection({ kind: "landmark", id: pointId });
+          if (!id.startsWith("landmark:") || !hit?.primitive?.ready)
+            this.flyToLandmark(pointId);
+        } else onSelection(null);
       },
       ScreenSpaceEventType.LEFT_CLICK,
+    );
+    this.viewer.screenSpaceEventHandler.setInputAction(
+      ({ endPosition }: { endPosition: Cartesian2 }) => {
+        const hit = scene.pick(endPosition);
+        const id: unknown = hit?.id?.id ?? hit?.id;
+        const pointId =
+          typeof id === "string" ? this.pointFeatures.pointId(id) : null;
+        scene.canvas.style.cursor = pointId ? "pointer" : "";
+        reportHover(
+          pointId ? { id: pointId, x: endPosition.x, y: endPosition.y } : null,
+        );
+      },
+      ScreenSpaceEventType.MOUSE_MOVE,
     );
     this.resetCamera(false);
   }
@@ -167,12 +194,14 @@ export class MoonScene {
   async applyMaps(layers: MapLayer[], force = false) {
     this.maps = layers;
     await this.mapLayers.apply(layers, force);
+    this.pointModels.updateGround();
   }
 
   applyState(state: SceneState) {
     const radiusChanged = this.radius !== state.radiusKm * 1000;
     this.state = state;
     if (radiusChanged) {
+      this.pointModels.clear();
       this.navigation.setMode("orbit");
       this.radius = state.radiusKm * 1000;
       this.viewer.scene.globe = new Globe(
@@ -227,6 +256,7 @@ export class MoonScene {
   }
 
   resetCamera(animate = true) {
+    this.pointModels?.releaseCamera();
     if (this.lighting) this.lighting.roaming = false;
     this.navigation?.setMode("orbit");
     if (this.state?.exhibit) {
@@ -257,25 +287,40 @@ export class MoonScene {
     });
   }
   flyToLandmark(id: string) {
+    this.pointModels.releaseCamera();
     const landmark = this.state?.points.find((item) => item.id === id);
     if (!landmark) return;
     this.navigation.setMode("orbit");
+    this.pointFeatures.select(id);
     this.viewer.camera.flyTo({
       destination: Cartesian3.fromDegrees(
         landmark.longitude,
         landmark.latitude,
-        this.radius * 0.65,
+        this.radius *
+          (landmark.category === "环形山"
+            ? 0.22
+            : landmark.category === "月海"
+              ? 1.0
+              : 0.45),
         this.viewer.scene.globe.ellipsoid,
       ),
       duration: 1.2,
     });
   }
   setNavigation(mode: NavigationMode) {
+    if (mode !== "orbit") this.pointModels.clear();
     this.lighting.roaming = mode !== "orbit";
     this.navigationMode = mode;
     for (const id of this.overlayIds)
       this.viewer.entities.getById(id)!.show = mode === "orbit";
     this.navigation.setMode(mode);
+    this.pointFeatures.setEnabled(mode === "orbit");
+  }
+  selectLandmark(id: string | null) {
+    this.pointFeatures.select(id);
+  }
+  setExplorationTheme(ids: string[]) {
+    this.pointFeatures.setTheme(ids);
   }
   zoom(direction: "in" | "out") {
     const distance = Math.max(
@@ -297,7 +342,19 @@ export class MoonScene {
   inspectBase() {
     this.navigation.inspectBase();
   }
+  loadPointModel(point: LunarPoint) {
+    this.navigation.setMode("orbit");
+    void this.pointModels.load(point);
+  }
+  focusPointModel() {
+    this.pointModels.focus();
+  }
+  clearPointModel() {
+    this.pointModels.clear();
+  }
   dispose() {
+    this.pointModels.dispose();
+    this.pointFeatures.dispose();
     this.exhibit.dispose();
     this.evolution.dispose();
     this.lighting.dispose();
@@ -405,40 +462,13 @@ export class MoonScene {
       state.exhibit ||
       !state.showLandmarks ||
       state.hiddenLayers.includes(state.layers[0].id)
-    )
+    ) {
+      this.pointFeatures.configure([], () => false);
       return;
-    for (const place of state.points) {
-      if (!place.visible || !this.retained(place.longitude, place.latitude))
-        continue;
-      add({
-        id: `landmark:${place.id}`,
-        position: Cartesian3.fromDegrees(
-          place.longitude,
-          place.latitude,
-          12000,
-          ellipsoid,
-        ),
-        point: {
-          pixelSize: 7,
-          color:
-            place.category === "着陆点"
-              ? Color.GOLD
-              : Color.fromCssColorString("#b8dacf"),
-          outlineColor: Color.BLACK,
-          outlineWidth: 2,
-        },
-        label: {
-          text: place.name,
-          font: "16px sans-serif",
-          fillColor: Color.WHITE,
-          verticalOrigin: VerticalOrigin.BOTTOM,
-          pixelOffset: new Cartesian2(0, -12),
-          distanceDisplayCondition: new DistanceDisplayCondition(
-            0,
-            this.radius * (place.category === "月海" ? 5 : 1.3),
-          ),
-        },
-      });
     }
+    this.pointFeatures.configure(state.points, (longitude, latitude) =>
+      this.retained(longitude, latitude),
+    );
+    this.pointFeatures.setEnabled(this.navigationMode === "orbit");
   }
 }

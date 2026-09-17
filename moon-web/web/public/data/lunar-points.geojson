@@ -15,9 +15,13 @@
         "name": "阿波罗 11 号着陆点",
         "category": "着陆点",
         "visible": true,
-        "description": "1969 年首次载人登月任务的着陆位置，位于静海。照片为 NASA/JSC 的任务历史照片；登月舱模型由 NASA/Michael D. Carbajal 提供，不是现场三维扫描。",
+        "description": "1969 年 7 月 20 日，阿波罗 11 号的“鹰”号登月舱在静海着陆。阿姆斯特朗和奥尔德林走出舱门，第一次把人类的足迹留在另一颗天体上；柯林斯则驾驶“哥伦比亚”号在月球轨道等待。\n\n两位宇航员采集了约 21.5 千克岩石和月壤，并在着陆点附近布设科学实验。带回地球的样品帮助研究者认识月海玄武岩和月球早期历史。今天，轨道影像仍能辨认登月舱下降级、仪器与宇航员活动留下的痕迹。",
         "source": "https://www.nasa.gov/mission/apollo-11/",
         "images": [
+          {
+            "title": "阿姆斯特朗在登月舱旁工作 · NASA",
+            "url": "/assets/poi-media/apollo11-armstrong.jpg"
+          },
           {
             "title": "阿波罗 11 号登月舱与奥尔德林 · NASA/JSC",
             "url": "/assets/apollo11.jpg"
@@ -25,6 +29,10 @@
         ],
         "modelUrl": "/assets/apollo-lunar-module.glb",
         "references": [
+          {
+            "title": "Apollo 11 Preliminary Science Report · NASA SP-214",
+            "url": "https://www.nasa.gov/wp-content/uploads/static/history/alsj/a11/as11psr.pdf"
+          },
           {
             "title": "NASA · Apollo by the Numbers",
             "url": "https://www.nasa.gov/wp-content/uploads/2023/04/sp-4029.pdf"
@@ -35,6 +43,14 @@
           }
         ],
         "links": [
+          {
+            "title": "NASA · 阿波罗 11 号任务档案",
+            "url": "https://www.nasa.gov/mission/apollo-11/"
+          },
+          {
+            "title": "NASA · 月球样品三维档案",
+            "url": "https://ares.jsc.nasa.gov/astromaterials3d/apollo-lunar.htm"
+          },
           {
             "title": "NASA 登月舱模型及署名",
             "url": "https://science.nasa.gov/3d-resources/apollo-lunar-module/"
@@ -53,20 +69,42 @@
       },
       "properties": {
         "id": "yutu",
-        "name": "玉兔号巡视器（LROC 记录位置）",
+        "name": "玉兔号巡视器",
         "category": "巡视器",
         "visible": true,
-        "description": "坐标由 LROC 科学团队发布，采用月球 ME 参考系。位置来自 2016 年目标目录；巡视器记录位置不是实时位置。",
+        "description": "玉兔号随嫦娥三号抵达雨海，驶下着陆器后开展月面巡视。六个车轮把探测仪器带到不同位置，全景相机记录周围地形，光谱仪分析矿物，测月雷达探查月壤和地下层次。\n\nLROC 在不同月份拍摄的影像中辨认出了巡视器及其车辙。阳光照射角度改变时，同一片月面会显露出不同细节：低角度阳光拉长阴影，较高的太阳位置则更容易突出车辙和表面反射率差异。",
         "source": "https://www.lroc.asu.edu/data/support/downloads/2016_LROC_Coordinates_of_Human_Features.pdf",
-        "images": [],
+        "images": [
+          {
+            "title": "月面上的玉兔号巡视器 · 国家航天局",
+            "url": "/assets/poi-media/yutu-cnsa.jpg"
+          },
+          {
+            "title": "玉兔车辙与巡视位置 · NASA/GSFC/ASU",
+            "url": "/assets/poi-media/yutu-tracks.png"
+          },
+          {
+            "title": "着陆前后四期轨道影像对比 · NASA/GSFC/ASU",
+            "url": "/assets/poi-media/yutu-sequence.png"
+          }
+        ],
         "modelUrl": "",
         "references": [
           {
-            "title": "LROC 人工目标坐标表（2016）",
+            "title": "LROC 人工目标坐标表 · 2016 年记录位置",
             "url": "https://www.lroc.asu.edu/data/support/downloads/2016_LROC_Coordinates_of_Human_Features.pdf"
           }
         ],
-        "links": []
+        "links": [
+          {
+            "title": "国家航天局 · 嫦娥三号与玉兔科学载荷",
+            "url": "https://www.cnsa.gov.cn/n6758824/n6759008/n6759013/c6794310/content.html"
+          },
+          {
+            "title": "LROC · 从轨道观察玉兔车辙",
+            "url": "https://lroc.im-ldi.com/images/751"
+          }
+        ]
       }
     },
     {
@@ -83,17 +121,39 @@
         "name": "嫦娥三号着陆点",
         "category": "着陆点",
         "visible": true,
-        "description": "坐标由 LROC 科学团队发布，采用月球 ME 参考系。位置来自 2016 年目标目录；巡视器记录位置不是实时位置。",
+        "description": "2013 年 12 月 14 日，嫦娥三号在雨海北部着陆，实现了中国首次月面软着陆与巡视勘察。着陆器与玉兔号分离后互相拍摄照片，也开始了月表成像、天文观测和原位科学探测。\n\n着陆区位于古老的火山平原，邻近一座直径约 450 米的撞击坑。LROC 把着陆前后的轨道影像进行对比，确认了着陆器和巡视器的位置。附近的月海玄武岩、皱脊和小型撞击坑，记录了熔岩充填、地壳变形与撞击叠加的过程。",
         "source": "https://www.lroc.asu.edu/data/support/downloads/2016_LROC_Coordinates_of_Human_Features.pdf",
-        "images": [],
+        "images": [
+          {
+            "title": "嫦娥三号着陆区俯视影像 · NASA/GSFC/ASU",
+            "url": "/assets/poi-media/change3-orbit.png"
+          },
+          {
+            "title": "从轨道斜视着陆区及附近撞击坑 · NASA/GSFC/ASU",
+            "url": "/assets/poi-media/change3-oblique.png"
+          }
+        ],
         "modelUrl": "",
         "references": [
+          {
+            "title": "Robinson 等 · Imaging of the Chang’e 3 Landing Site · LPSC 2014",
+            "url": "https://www.hou.usra.edu/meetings/lpsc2014/pdf/1859.pdf"
+          },
           {
             "title": "LROC 人工目标坐标表（2016）",
             "url": "https://www.lroc.asu.edu/data/support/downloads/2016_LROC_Coordinates_of_Human_Features.pdf"
           }
         ],
-        "links": []
+        "links": [
+          {
+            "title": "国家航天局 · 嫦娥三号探测器",
+            "url": "https://www.cnsa.gov.cn/n6758824/n6759008/n6759013/c6794310/content.html"
+          },
+          {
+            "title": "LROC · 着陆区影像与地质背景",
+            "url": "https://lroc.im-ldi.com/images/637"
+          }
+        ]
       }
     },
     {
@@ -2782,12 +2842,30 @@
         "id": "usgs-1296",
         "name": "哥白尼环形山",
         "category": "环形山",
-        "description": "Copernicus，IAU 命名月球环形山。目录直径约 96.1 km。命名来源（USGS 原文）：Nicholas; Polish astronomer (1473-1543).。点表示地貌中心，不表示边界。",
+        "description": "哥白尼环形山位于月球正面，是观察复杂撞击坑的经典地点。沿坑缘向内看，可以依次发现呈台阶状的坑壁、相对平坦的坑底和中央峰；坑外则散布着明亮的溅射物和链状次生坑。\n\n中央峰形成于巨大撞击后地层的快速回弹，把原先深埋地下的岩石抬升到月面。LROC 近景显示了中央峰上浅色、破碎的基岩。阿波罗 17 号的斜视照片还记录了指向哥白尼的坑链，可以沿这些线索追踪抛射物的运动方向。",
         "source": "https://planetarynames.wr.usgs.gov/Feature/1296",
         "visible": true,
-        "images": [],
+        "images": [
+          {
+            "title": "阿波罗 17 号斜视哥白尼与次生坑链 · NASA/LPI",
+            "url": "/assets/poi-media/copernicus-orbit.jpg"
+          },
+          {
+            "title": "中央峰暴露的浅色基岩 · NASA/GSFC/ASU",
+            "url": "/assets/poi-media/copernicus-peak.jpg"
+          }
+        ],
         "modelUrl": "",
-        "references": [],
+        "references": [
+          {
+            "title": "NASA · Central Peak of Copernicus Crater · PIA13095",
+            "url": "https://science.nasa.gov/photojournal/central-peak-of-copernicus-crater/"
+          },
+          {
+            "title": "NASA · Copernicus Crater · 阿波罗 17 号摄影资料",
+            "url": "https://science.nasa.gov/resource/copernicus-crater/"
+          }
+        ],
         "links": [
           {
             "title": "USGS / IAU 地名记录",
@@ -6238,12 +6316,30 @@
         "id": "usgs-3691",
         "name": "静海",
         "category": "月海",
-        "description": "Mare Tranquillitatis，IAU 命名月球月海。目录直径约 875.7 km。命名来源（USGS 原文）：\"Sea of Tranquility.\"。点表示地貌中心，不表示边界。",
+        "description": "静海是一片由玄武质熔岩铺展形成的暗色平原。“海”的名字来自早期观月者的想象；今天我们知道，这里的暗色表面是火山活动留下的岩石。阿波罗 11 号在静海西南部着陆，让人类第一次直接采集月海样品。\n\n伽利略号的假彩色影像把矿物差异变得醒目：静海呈现深蓝色，反映它与相邻澄海在含钛物质丰度上的不同。静海还保存着月坑、皱脊等火山相关地貌，其中深坑的陡壁为研究月表以下结构提供了窗口。",
         "source": "https://planetarynames.wr.usgs.gov/Feature/3691",
         "visible": true,
-        "images": [],
+        "images": [
+          {
+            "title": "伽利略号假彩色月球影像，静海位于右侧深蓝区域 · NASA/JPL",
+            "url": "/assets/poi-media/maria-color.jpg"
+          },
+          {
+            "title": "静海深坑的陡壁与坑底岩块 · NASA/GSFC/ASU",
+            "url": "/assets/poi-media/tranquillitatis-pit.jpg"
+          }
+        ],
         "modelUrl": "",
-        "references": [],
+        "references": [
+          {
+            "title": "NASA/JPL · Moon — False Color Mosaic · PIA00132",
+            "url": "https://www.jpl.nasa.gov/images/pia00132-moon-false-color-mosaic/"
+          },
+          {
+            "title": "NASA · New Views of Lunar Pits · PIA13518",
+            "url": "https://science.nasa.gov/photojournal/new-views-of-lunar-pits/"
+          }
+        ],
         "links": [
           {
             "title": "USGS / IAU 地名记录",
@@ -9316,12 +9412,30 @@
         "id": "usgs-6163",
         "name": "第谷环形山",
         "category": "环形山",
-        "description": "Tycho，IAU 命名月球环形山。目录直径约 85.3 km。命名来源（USGS 原文）：Tycho Brahe; Danish astronomer (1546-1601).。点表示地貌中心，不表示边界。",
+        "description": "第谷环形山位于月球南部高地，周围向四面伸展的明亮辐射纹，是撞击抛射物留下的醒目标记。坑内的陡峭山壁、中央峰和凝固熔融物，保留了猛烈撞击塑造月面的证据。\n\n中央峰来自撞击后地下岩层的回弹，峰顶可见巨大的岩块与破裂的岩石。LROC 团队把不同视角拍摄的影像组合成高精度地形模型，测得中央峰相对坑底约 2.5 千米的高差。沿着峰体、坑底和坑缘观察，能读出一次撞击留下的不同地貌。",
         "source": "https://planetarynames.wr.usgs.gov/Feature/6163",
         "visible": true,
-        "images": [],
+        "images": [
+          {
+            "title": "第谷中央峰的低太阳高度角斜视影像 · NASA/GSFC/ASU",
+            "url": "/assets/poi-media/tycho-peak.png"
+          },
+          {
+            "title": "第谷环形山与周围高地 · NASA/GSFC/ASU",
+            "url": "/assets/poi-media/tycho-overview.png"
+          }
+        ],
         "modelUrl": "",
-        "references": [],
+        "references": [
+          {
+            "title": "LROC · Tycho: A Model Central Peak · 2023",
+            "url": "https://lroc.im-ldi.com/images/1290"
+          },
+          {
+            "title": "LROC · Tycho Central Peak Spectacular! · 2011",
+            "url": "https://lroc.im-ldi.com/images/384"
+          }
+        ],
         "links": [
           {
             "title": "USGS / IAU 地名记录",
@@ -10369,12 +10483,30 @@
         "id": "usgs-3678",
         "name": "雨海",
         "category": "月海",
-        "description": "Mare Imbrium，IAU 命名月球月海。目录直径约 1145.5 km。命名来源（USGS 原文）：\"Sea of Showers.\"。点表示地貌中心，不表示边界。",
+        "description": "雨海是月球正面最醒目的大尺度地貌之一。一次巨型撞击先开凿出盆地，后续多期火山喷发又让熔岩逐渐填入低地，最终形成今天看到的暗色月海平原。\n\n皮通山等孤立山峰高出平原，像露出海面的岛屿，保留着古老盆地山环的残迹。雨海因此同时讲述着撞击与火山两段历史。沿南缘可认识阿波罗 15 号探索过的山地与月海交界，沿北部则能找到嫦娥三号和玉兔的着陆巡视区域。",
         "source": "https://planetarynames.wr.usgs.gov/Feature/3678",
         "visible": true,
-        "images": [],
+        "images": [
+          {
+            "title": "雨海平原中的皮通山 · NASA/GSFC/ASU",
+            "url": "/assets/poi-media/imbrium-piton.png"
+          },
+          {
+            "title": "阿波罗 17 号越过雨海眺望哥白尼 · NASA/LPI",
+            "url": "/assets/poi-media/copernicus-orbit.jpg"
+          }
+        ],
         "modelUrl": "",
-        "references": [],
+        "references": [
+          {
+            "title": "NASA · On and Around Mons Piton · 2019",
+            "url": "https://science.nasa.gov/resource/on-and-around-mons-piton/"
+          },
+          {
+            "title": "NASA · History of Lunar Exploration",
+            "url": "https://science.nasa.gov/solar-system/moon/history-of-lunar-exploration/"
+          }
+        ],
         "links": [
           {
             "title": "USGS / IAU 地名记录",

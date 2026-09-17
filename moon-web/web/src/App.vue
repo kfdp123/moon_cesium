@@ -24,12 +24,19 @@ import {
   HelpCircle,
   Type,
   Orbit,
+  Compass,
+  ChevronLeft,
+  ChevronRight,
 } from "@lucide/vue";
 import MoonViewport from "./components/MoonViewport.vue";
+import GeologyViewport from "./components/GeologyViewport.vue";
+import { geologyExhibits } from "./data/lunarGeology";
 import ParameterPanel from "./components/ParameterPanel.vue";
 import MapPanel from "./components/MapPanel.vue";
 import PointPanel from "./components/PointPanel.vue";
 import PointDetails from "./components/PointDetails.vue";
+import ExplorationWelcome from "./components/ExplorationWelcome.vue";
+import { explorationThemes } from "./data/pointStories";
 import AstronomyPanel from "./components/AstronomyPanel.vue";
 import RoverControls from "./components/RoverControls.vue";
 import InteriorControls from "./components/InteriorControls.vue";
@@ -41,20 +48,44 @@ import { useAstronomy } from "./stores/astronomy";
 import { useExplorer } from "./stores/explorer";
 import { useCatalog } from "./stores/catalog";
 import { epochs } from "./data/moon";
-import type { CutawayMode, NavigationMode } from "./types";
+import type { CutawayMode, NavigationMode, LunarPoint } from "./types";
+import type { PointModelState } from "./scene/PointModelLayer";
 const explorer = useExplorer();
 const catalog = useCatalog();
 const astronomy = useAstronomy();
 const tour = useEvolutionTour();
 const viewport = ref<InstanceType<typeof MoonViewport>>();
+const mapModelState = ref<PointModelState | null>(null);
 const orbitalViewport = ref<InstanceType<typeof OrbitalViewport>>();
+const geologyViewport = ref<InstanceType<typeof GeologyViewport>>();
+const geologyOpen = ref(false);
+const geologyStage = ref(2);
 const activeViewport = computed(() =>
-  astronomy.view === "moon" ? viewport.value : orbitalViewport.value,
+  geologyOpen.value
+    ? geologyViewport.value
+    : astronomy.view === "moon"
+      ? viewport.value
+      : orbitalViewport.value,
 );
 type SceneMode = "explore" | "interior" | "roam" | "system";
 type Tool = "parameters" | "maps" | "points" | "scenes" | "astronomy";
 const sceneMode = ref<SceneMode>("explore");
 const tab = ref<Tool | null>(null);
+const welcomeOpen = ref(true);
+const explorationTheme = ref<string | null>(null);
+const themeStep = ref(0);
+const availableThemes = computed(() => {
+  const ids = new Set(catalog.points.map((point) => point.id));
+  return explorationThemes
+    .map((theme) => ({
+      ...theme,
+      pointIds: theme.pointIds.filter((id) => ids.has(id)),
+    }))
+    .filter((theme) => theme.pointIds.length);
+});
+const activeTheme = computed(() =>
+  availableThemes.value.find((theme) => theme.id === explorationTheme.value),
+);
 const ready = ref(false);
 const playing = computed(() => tour.playing);
 const aboutOpen = ref(false);
@@ -73,6 +104,7 @@ const workspaces = [
   { id: "system", label: "地月运动", icon: Orbit },
 ] as const;
 const tools = computed(() => {
+  if (geologyOpen.value) return [];
   if (sceneMode.value === "system")
     return [{ id: "astronomy", label: "运动设置", icon: Settings }] as const;
   if (sceneMode.value === "roam")
@@ -83,7 +115,7 @@ const tools = computed(() => {
   return [
     { id: "parameters", label: "参数模型", icon: SlidersHorizontal },
     { id: "maps", label: "图层管理", icon: Layers },
-    { id: "points", label: "点位管理", icon: MapPin },
+    { id: "points", label: "科普探索", icon: MapPin },
     ...(sceneMode.value === "explore"
       ? [{ id: "astronomy" as const, label: "光照设置", icon: Sun }]
       : []),
@@ -92,14 +124,14 @@ const tools = computed(() => {
 const toolTitle: Record<Tool, string> = {
   parameters: "月球参数模型",
   maps: "图层管理",
-  points: "科普点位",
+  points: "科普探索",
   scenes: "漫游方式",
   astronomy: "光照与运动设置",
 };
 const toolCaption: Record<Tool, string> = {
   parameters: "参数",
   maps: "图层",
-  points: "点位",
+  points: "科普",
   scenes: "漫游",
   astronomy: "光照",
 };
@@ -110,15 +142,32 @@ function closeDetails() {
   explorer.selectedLayer = null;
   explorer.selectedLandmark = null;
 }
+function openGeology() {
+  tour.stop();
+  pauseDate();
+  closeDetails();
+  tab.value = null;
+  ready.value = false;
+  geologyOpen.value = true;
+}
+function closeGeology() {
+  geologyOpen.value = false;
+  ready.value = false;
+}
 watch(
   () => [explorer.selectedLayer, explorer.selectedLandmark],
   ([layer, point]) => {
-    if (layer || point) tab.value = null;
+    if (layer || point) {
+      tab.value = null;
+      welcomeOpen.value = false;
+    }
   },
 );
 function openTool(tool: Tool) {
+  if (tool === "points") endExplorationTheme();
   if (sceneMode.value === "interior") tour.pause();
   closeDetails();
+  welcomeOpen.value = false;
   tab.value = tab.value === tool ? null : tool;
 }
 function pauseDate() {
@@ -127,7 +176,14 @@ function pauseDate() {
 }
 function selectWorkspace(value: SceneMode) {
   if (sceneMode.value === value) return;
+  viewport.value?.clearPointModel();
+  endExplorationTheme();
+  welcomeOpen.value = value === "explore";
   const leavingInterior = sceneMode.value === "interior";
+  if (geologyOpen.value) {
+    geologyOpen.value = false;
+    ready.value = false;
+  }
   tour.stop();
   if (sceneMode.value === "interior") {
     interiorEpoch = explorer.epochIndex;
@@ -178,7 +234,7 @@ const sceneModes: { id: NavigationMode; name: string; description: string }[] =
     {
       id: "rover",
       name: "月球车轨迹行驶",
-      description: "沿月面示意路线自动行驶，支持自由、固定跟随和车载第一视角。",
+      description: "沿月面路线自动行驶，切换自由、固定跟随和车载第一视角。",
     },
     {
       id: "orbit",
@@ -193,7 +249,7 @@ const sceneModes: { id: NavigationMode; name: string; description: string }[] =
     {
       id: "base-tour",
       name: "环游月面基地",
-      description: "自动环绕示意基地，观察舱体、太阳能板和通信塔。",
+      description: "环绕月面基地，观察舱体、太阳能板和通信塔。",
     },
     {
       id: "third-person",
@@ -265,17 +321,53 @@ function inspectBase() {
   navigate("first-person");
   viewport.value?.inspectBase();
 }
-function locate(id: string) {
+async function locate(id: string) {
+  const point = catalog.points.find((p) => p.id === id);
+  if (!point) return;
   pause();
   stopNavigation();
+  if (sceneMode.value !== "explore") selectWorkspace("explore");
+  welcomeOpen.value = false;
   explorer.cutaway = "full";
-  const point = catalog.points.find((p) => p.id === id)!;
   point.visible = true;
   explorer.showLandmarks = true;
   explorer.hiddenLayers = [];
   explorer.selectedLayer = null;
   explorer.selectedLandmark = id;
+  await nextTick();
   viewport.value?.flyTo(id);
+}
+async function startExplorationTheme(id: string) {
+  const theme = availableThemes.value.find((item) => item.id === id);
+  if (!theme) return;
+  explorationTheme.value = id;
+  themeStep.value = 0;
+  for (const point of catalog.points)
+    if (theme.pointIds.includes(point.id)) point.visible = true;
+  await locate(theme.pointIds[0]!);
+  viewport.value?.setTheme(theme.pointIds);
+}
+function stepExplorationTheme(direction: number) {
+  const theme = activeTheme.value!;
+  themeStep.value =
+    (themeStep.value + direction + theme.pointIds.length) %
+    theme.pointIds.length;
+  viewport.value?.clearPointModel();
+  void locate(theme.pointIds[themeStep.value]!);
+}
+function endExplorationTheme() {
+  explorationTheme.value = null;
+  viewport.value?.setTheme([]);
+}
+async function loadPointModel(point: LunarPoint) {
+  pause();
+  pauseDate();
+  stopNavigation();
+  if (sceneMode.value !== "explore") selectWorkspace("explore");
+  explorer.cutaway = "full";
+  explorer.hiddenLayers = [];
+  await nextTick();
+  viewport.value?.loadPointModel(point);
 }
 function playback() {
   if (playing.value) {
@@ -314,24 +406,30 @@ async function downloadImage() {
     context.fillStyle = "#fff";
     context.font = "14px sans-serif";
     context.fillText(
-      `月见 · ${astronomy.view === "system" ? "地月全景" : explorer.epoch.age} · UTC ${astronomy.clock.currentTime.toString()} · ${astronomy.view === "system" ? (astronomy.trueScale ? "真实比例" : "距离1/8、月球大小3倍") : "圈层/基地/人物为教学示意"}`,
+      geologyOpen.value
+        ? `${geologyExhibits[geologyStage.value]!.name} · 月球局部构造`
+        : `${sceneName.value} · ${astronomy.view === "system" ? "地月全景" : explorer.epoch.age} · UTC ${astronomy.clock.currentTime.toString()}`,
       20,
       canvas.height - 53,
       canvas.width - 40,
     );
     context.fillText(
-      astronomy.view === "system"
-        ? "月球影像：NASA LRO · 地球影像：NASA Blue Marble 2004-09 · 运动/大气：模拟"
-        : `现今月表来源：${catalog.mapLayers
-            .filter((l) => l.visible)
-            .map((l) => l.name)
-            .join(" / ")}`,
+      geologyOpen.value
+        ? "科学参考：NASA / LPI"
+        : astronomy.view === "system"
+          ? "月球影像：NASA LRO · 地球影像：NASA Blue Marble 2004-09 · 运动/大气：模拟"
+          : `现今月表来源：${catalog.mapLayers
+              .filter((l) => l.visible)
+              .map((l) => l.name)
+              .join(" / ")}`,
       20,
       canvas.height - 23,
       canvas.width - 40,
     );
     const link = document.createElement("a");
-    link.download = `moon-${explorer.epoch.id}.png`;
+    link.download = geologyOpen.value
+      ? `lunar-geology-${geologyExhibits[geologyStage.value]!.id}.png`
+      : `moon-${explorer.epoch.id}.png`;
     link.href = canvas.toDataURL("image/png");
     link.click();
   } catch (cause) {
@@ -362,11 +460,20 @@ onBeforeUnmount(() => {
     }"
   >
     <main class="scene-canvas" aria-label="月球探索工作区">
+      <GeologyViewport
+        v-if="geologyOpen"
+        ref="geologyViewport"
+        :initial-stage="explorer.epochIndex"
+        @ready="ready = true"
+        @close="closeGeology"
+        @stage="geologyStage = $event"
+      />
       <MoonViewport
-        v-if="astronomy.view === 'moon'"
+        v-else-if="astronomy.view === 'moon'"
         ref="viewport"
         @ready="ready = true"
         @interact="pause"
+        @point-model="mapModelState = $event"
       />
       <OrbitalViewport
         v-else
@@ -425,10 +532,64 @@ onBeforeUnmount(() => {
       </div>
     </header>
     <InteriorControls
-      v-if="sceneMode === 'interior'"
+      v-if="sceneMode === 'interior' && !geologyOpen"
       @overview="viewport?.reset()"
+      @local="openGeology"
     />
-    <EvolutionTour v-if="sceneMode === 'interior'" />
+    <EvolutionTour v-if="sceneMode === 'interior' && !geologyOpen" />
+    <ExplorationWelcome
+      v-if="sceneMode === 'explore' && welcomeOpen && !tab && !landmark"
+      :points="catalog.points"
+      @close="welcomeOpen = false"
+      @locate="locate"
+      @theme="startExplorationTheme"
+    />
+    <button
+      v-if="
+        sceneMode === 'explore' &&
+        !welcomeOpen &&
+        !tab &&
+        !activeTheme &&
+        !mapModelState
+      "
+      class="exploration-return secondary-button"
+      @click="
+        closeDetails();
+        welcomeOpen = true;
+        viewport?.reset();
+      "
+    >
+      <Compass :size="19" />精选探索
+    </button>
+    <div
+      v-if="activeTheme && sceneMode === 'explore' && !mapModelState"
+      class="exploration-tour"
+      aria-label="科普线路"
+    >
+      <div>
+        <span
+          >科普线路 · {{ themeStep + 1 }} /
+          {{ activeTheme.pointIds.length }}</span
+        ><strong>{{ activeTheme.title }}</strong>
+      </div>
+      <button
+        class="icon-button"
+        aria-label="上一个科普地点"
+        @click="stepExplorationTheme(-1)"
+      >
+        <ChevronLeft :size="21" />
+      </button>
+      <button class="primary-button" @click="stepExplorationTheme(1)">
+        下一站<ChevronRight :size="18" />
+      </button>
+      <button
+        class="icon-button"
+        aria-label="结束科普线路"
+        @click="endExplorationTheme"
+      >
+        <X :size="18" />
+      </button>
+    </div>
     <div v-if="sceneMode === 'system'" class="earth-view-actions">
       <button
         class="secondary-button"
@@ -436,6 +597,13 @@ onBeforeUnmount(() => {
         @click="orbitalViewport?.focusEarth()"
       >
         聚焦地球
+      </button>
+      <button
+        class="secondary-button"
+        :disabled="!ready"
+        @click="orbitalViewport?.focusMoon()"
+      >
+        聚焦月球
       </button>
       <button
         class="secondary-button"
@@ -546,14 +714,17 @@ onBeforeUnmount(() => {
         <details>
           <summary>场景说明</summary>
           <p class="panel-note">
-            从 20°W、10°N 附近的开阔月表出发，可走离基地。启用 DEM
-            时随高程行走；近景月壤纹理、基地与人物为示意，全球数据不含米级地貌。
+            从 20°W、10°N 附近的月表出发。启用 DEM 后沿地形高程行走。
           </p>
         </details>
       </section>
     </aside>
     <div
-      v-if="astronomy.view === 'moon' && (explorer.selection || landmark)"
+      v-if="
+        !geologyOpen &&
+        astronomy.view === 'moon' &&
+        (explorer.selection || landmark)
+      "
       class="detail-card rich-detail floating-detail"
     >
       <button
@@ -566,7 +737,12 @@ onBeforeUnmount(() => {
       >
         <X :size="16" />
       </button>
-      <PointDetails v-if="landmark" :point="landmark" />
+      <PointDetails
+        v-if="landmark"
+        :point="landmark"
+        :model-state="mapModelState"
+        @load-model="loadPointModel(landmark)"
+      />
       <template v-else-if="explorer.selection"
         ><span class="eyebrow">{{ explorer.selection.english }}</span>
         <h3>{{ explorer.selection.name }}</h3>
@@ -598,19 +774,47 @@ onBeforeUnmount(() => {
     <div v-if="sceneMode === 'roam'" class="roaming-strip">
       <strong>{{ sceneModes.find((s) => s.id === navigation)?.name }}</strong>
       <RoverControls v-if="navigation === 'rover'" />
-      <button v-else @click="helpOpen = !helpOpen">
+      <button v-else class="text-button" @click="helpOpen = !helpOpen">
         {{ helpOpen ? "收起操作说明" : "操作说明" }}
       </button>
-      <button v-if="navigation !== 'orbit'" @click="stopNavigation">
+      <button
+        v-if="navigation !== 'orbit'"
+        class="secondary-button"
+        @click="stopNavigation"
+      >
         退出漫游
       </button>
-      <button v-else @click="openTool('scenes')">选择漫游方式</button>
+      <button v-else class="primary-button" @click="openTool('scenes')">
+        选择漫游方式
+      </button>
       <p v-if="helpOpen && navigation !== 'rover'">
         点击月面后 WASD 移动 · 方向键转头 · Shift
         加速。输入框获得焦点时不会触发步行。
       </p>
     </div>
-    <div class="floating-time">
+    <div
+      v-if="mapModelState"
+      class="map-model-actions"
+      aria-label="地图模型操作"
+    >
+      <strong>{{ mapModelState.title }}</strong>
+      <button
+        class="secondary-button"
+        :disabled="mapModelState.status !== 'ready'"
+        @click="viewport?.focusPointModel()"
+      >
+        聚焦模型
+      </button>
+      <button
+        class="icon-button"
+        aria-label="移除地图模型"
+        title="移除模型"
+        @click="viewport?.clearPointModel()"
+      >
+        <X :size="20" />
+      </button>
+    </div>
+    <div v-if="!geologyOpen" class="floating-time">
       <AstroTimeline
         v-if="sceneMode !== 'interior'"
         :expanded="timeExpanded"
@@ -633,6 +837,7 @@ onBeforeUnmount(() => {
             v-for="(epoch, index) in epochs"
             :key="epoch.id"
             :class="{ active: explorer.epochIndex === index }"
+            :aria-pressed="explorer.epochIndex === index"
             @click="selectEpoch(index)"
           >
             <span class="timeline-node" /><strong>{{ epoch.age }}</strong
@@ -650,7 +855,9 @@ onBeforeUnmount(() => {
         ready ? "场景已就绪" : "正在准备场景"
       }}
     </div>
-    <div v-if="sceneMode !== 'system'" class="source-credit">NASA / USGS</div>
+    <div v-if="sceneMode !== 'system'" class="source-credit">
+      {{ geologyOpen ? "原创模型 · NASA / LPI 科学参考" : "NASA / USGS" }}
+    </div>
     <div
       v-if="aboutOpen"
       class="modal-backdrop"
@@ -663,21 +870,22 @@ onBeforeUnmount(() => {
         aria-label="数据与说明"
       >
         <button class="modal-close" @click="aboutOpen = false">关闭</button>
-        <h2>数据、模型与演示边界</h2>
+        <h2>数据与资料</h2>
         <p>
-          三个早期阶段与现今状态共用一套参数化圈层。早期圈层参数尚待科学核定；当前叠加的地图属于现今月表，不是早期表面重建。
+          月表影像来自 NASA LRO，地形采用 LOLA 0.25° 高程网格，在线专题地图由
+          NASA Trek 提供。
         </p>
         <p>
-          NASA LRO 影像、LOLA 0.25° 高程与 NASA Trek
-          在线图层已接入。高程为全球概览，尚不满足合同 0.0625°
-          的最终数据要求，也不能支持基地尺度的真实地形细节。
+          科普目录收录 {{ catalog.points.length }} 个地点，地名与命名范围来自
+          USGS / IAU，着陆点资料来自 LROC。
         </p>
         <p>
-          {{ catalog.points.length }} 个科普点位来自 USGS/IAU 地名目录与 LROC
-          着陆目标资料。大地貌的矢量点表示中心，不是范围边界。可在点位管理中编辑、导入、导出。
+          图片署名与文献随地点展板展示。可在科普探索的资料管理中编辑、导入与导出点位资料。
         </p>
+        <p>年代参数、图层配置和点位修改保存在当前浏览器。</p>
         <p>
-          基地及人物是原创示意几何，漫游沿月球表面行走。年代参数、图层配置和点位修改可保存在本浏览器。后续接入服务端共享管理。
+          内部与演化提供岩浆海、分异与火山、撞击与冷却三个过程的局部构造观察，部件详情附
+          NASA / LPI 参考资料。
         </p>
         <a
           href="https://svs.gsfc.nasa.gov/4720/"

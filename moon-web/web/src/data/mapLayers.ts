@@ -56,7 +56,7 @@ export const defaultMapLayers: MapLayer[] = [
     kind: "image",
     url: SURFACE_TEXTURE_URL,
     source: "https://svs.gsfc.nasa.gov/4720/",
-    description: "本地 2K 影像，现今月表；用于展示而非科学反照率。",
+    description: "NASA LRO 全球月表影像，8192 × 4096 像素。",
     visible: true,
     opacity: 1,
     maximumLevel: 0,

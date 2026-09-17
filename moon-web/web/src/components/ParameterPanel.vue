@@ -49,6 +49,7 @@ function apply(action: () => void) {
           maxlength="40"
         />
         <button
+          class="icon-button danger-button"
           :aria-label="`删除${layer.name}`"
           @click="apply(() => explorer.removeLayer(layer.id))"
         >
@@ -96,7 +97,7 @@ function apply(action: () => void) {
     <button class="secondary-button" @click="apply(explorer.addLayer)">
       ＋ 新增外部圈层
     </button>
-    <button class="secondary-button" @click="apply(explorer.saveModel)">
+    <button class="primary-button" @click="apply(explorer.saveModel)">
       保存当前年代参数
     </button>
     <button class="text-button" @click="apply(explorer.restoreModel)">

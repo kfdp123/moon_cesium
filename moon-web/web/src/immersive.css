@@ -1,4 +1,28 @@
 /* The canvas never participates in panel layout. Only visible controls catch input. */
+.map-model-actions {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  bottom: calc(var(--time-space) + 14px);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: calc(100% - 180px);
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--glass);
+}
+.map-model-actions strong {
+  font-size: 1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.map-model-actions button {
+  flex-shrink: 0;
+}
 .immersive-app {
   position: fixed;
   inset: 0;
@@ -7,7 +31,7 @@
   --tool-offset: 86px;
   --header-bottom: 96px;
   --time-space: 104px;
-  --glass: #11222deb;
+  --glass: #111e2ef2;
 }
 .immersive-app.time-expanded {
   --time-space: 202px;
@@ -42,9 +66,9 @@
 .floating-time,
 .roaming-strip {
   background: var(--glass);
-  border: 1px solid #38515c;
+  border: 1px solid var(--control-border);
   border-radius: 12px;
-  box-shadow: 0 8px 30px #0004;
+  box-shadow: 0 10px 32px #0006;
   backdrop-filter: blur(16px);
 }
 .floating-header .brand {
@@ -58,9 +82,12 @@
   left: calc(var(--edge) + var(--tool-offset));
   top: var(--header-bottom);
   max-width: calc(100% - var(--edge) * 2 - var(--tool-offset));
-  padding: 12px;
+  width: 400px;
+  max-height: calc(100% - var(--header-bottom) - var(--time-space) - 12px);
+  overflow-y: auto;
+  padding: 14px;
   background: var(--glass);
-  border: 1px solid #38515c;
+  border: 1px solid var(--control-border);
   border-radius: 12px;
   z-index: 2;
 }
@@ -72,28 +99,37 @@
   gap: 8px;
 }
 .exhibit-layers {
-  margin-top: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
 }
-.interior-controls button,
-.interior-controls select {
-  padding: 9px 12px;
-  border: 1px solid #45645e;
-  border-radius: 7px;
-  color: #dcece6;
-  font-size: 0.9375rem;
+.exhibit-actions .primary-button,
+.exhibit-actions .secondary-button {
+  flex: 1;
+  padding-inline: 12px;
 }
-.interior-controls button[aria-pressed="true"] {
-  background: #2d5148;
+.exhibit-cuts {
+  margin-top: 12px;
 }
-.exhibit-layers button {
-  display: flex;
-  align-items: center;
-  gap: 7px;
+.layer-chip {
+  flex: 1;
+  padding: 9px 7px;
+  gap: 5px;
+  border-radius: 22px;
+  font-weight: 500;
+  white-space: nowrap;
 }
-.exhibit-layers button span {
+.layer-dot {
   width: 9px;
   height: 9px;
   border-radius: 50%;
+  flex-shrink: 0;
+}
+.layer-check {
+  visibility: hidden;
+}
+.layer-check.selected {
+  visibility: visible;
 }
 .exhibit-layers small {
   color: #abc0c9;
@@ -107,6 +143,7 @@
 }
 .stage-motion {
   margin-top: 10px;
+  flex-wrap: wrap;
 }
 .stage-motion small,
 .tour-actions small {
@@ -119,11 +156,14 @@
   transform: translateX(-50%);
   bottom: calc(var(--time-space) + 12px);
   width: min(620px, calc(100% - 120px));
+  max-height: calc(100% - var(--time-space) - 24px);
+  overflow-y: auto;
   background: var(--glass);
-  border: 1px solid #45645e;
+  border: 1px solid var(--control-border);
   border-radius: 12px;
   padding: 14px 18px;
   z-index: 4;
+  box-shadow: 0 10px 32px #0006;
 }
 .tour-heading strong {
   flex: 1;
@@ -142,7 +182,11 @@
   cursor: grabbing;
 }
 .tour-heading span {
-  color: #adc0c9;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.tour-drag-handle > svg {
+  color: var(--muted);
 }
 .evolution-caption p {
   margin: 10px 0;
@@ -150,23 +194,40 @@
 }
 .evolution-caption progress {
   width: 100%;
-  height: 4px;
+  height: 5px;
   display: block;
   margin-bottom: 12px;
+  appearance: none;
+  border: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #304258;
+}
+.evolution-caption progress::-webkit-progress-bar {
+  background: #304258;
+}
+.evolution-caption progress::-webkit-progress-value {
+  background: var(--accent);
+  border-radius: 4px;
+}
+.evolution-caption progress::-moz-progress-bar {
+  background: var(--accent);
 }
 .tour-actions button {
-  padding: 7px 12px;
-  border: 1px solid #45645e;
-  border-radius: 6px;
-}
-.tour-actions button:disabled {
-  opacity: 0.4;
+  padding-inline: 12px;
 }
 .tour-actions small {
   margin-left: auto;
   white-space: nowrap;
 }
 @media (max-width: 760px) {
+  .exhibit-layers {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .exhibit-layers small {
+    grid-column: 1 / -1;
+  }
   .evolution-caption {
     left: 82px;
     transform: none;
@@ -175,6 +236,17 @@
   }
   .tour-actions {
     flex-wrap: wrap;
+  }
+  .tour-actions .primary-button {
+    flex: 1 0 100%;
+    order: -1;
+  }
+  .tour-actions .secondary-button {
+    flex: 1;
+    padding-inline: 8px;
+  }
+  .tour-actions small {
+    flex-basis: 100%;
   }
 }
 .immersive-app:has(.floating-panel) .interior-controls {
@@ -199,16 +271,27 @@
   align-items: center;
   gap: 9px;
   padding: 12px 18px;
-  border-radius: 8px;
+  border: 1px solid transparent;
+  border-radius: var(--control-radius);
   font-size: 1rem;
   white-space: nowrap;
-  color: #b8cad1;
+  color: #c1cede;
 }
-.scene-switcher button[aria-pressed="true"],
+.scene-switcher button:hover:not(:disabled),
+.floating-tools button:hover:not(:disabled) {
+  background: var(--control-hover);
+  color: #fff;
+}
+.scene-switcher button[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+  font-weight: 600;
+}
 .floating-tools button[aria-pressed="true"] {
-  background: #2d5148;
-  color: #e1fff1;
-  box-shadow: inset 0 0 0 1px #6a9685;
+  background: var(--selected-bg);
+  color: var(--accent);
+  box-shadow: inset 3px 0 var(--accent);
 }
 .floating-actions {
   display: flex;
@@ -219,11 +302,11 @@
   top: calc(var(--header-bottom) + 64px);
   left: calc(var(--edge) + var(--tool-offset));
   display: flex;
+  flex-wrap: wrap;
+  max-width: calc(100% - var(--edge) * 2 - var(--tool-offset));
   gap: 8px;
 }
 .earth-view-actions .secondary-button {
-  background: var(--glass);
-  font-size: 0.875rem;
   margin: 0;
 }
 @media (max-width: 760px) {
@@ -252,7 +335,8 @@
   justify-content: center;
   align-items: center;
   gap: 6px;
-  border-radius: 8px;
+  border-radius: var(--control-radius);
+  color: #c1cede;
 }
 .floating-tools button span {
   font-size: 0.875rem;
@@ -260,7 +344,7 @@
 }
 .tool-divider {
   height: 1px;
-  background: #38515c;
+  background: var(--line);
   margin: 3px 7px;
   flex-shrink: 0;
 }
@@ -280,7 +364,7 @@
 .floating-panel .panel-heading {
   margin: 0 0 12px;
   padding-top: 12px;
-  background: #11222df5;
+  background: #111e2efa;
 }
 .floating-panel h1 {
   font-size: 1.25rem;
@@ -394,11 +478,11 @@
   flex-direction: column;
   gap: 8px;
 }
-.roaming-strip .rover-controls button {
-  border: 1px solid #45645e;
-  border-radius: 6px;
-  padding: 8px;
-  font-size: 0.875rem;
+.rover-controls .segmented-control button {
+  padding-inline: 6px;
+}
+.rover-controls .compact-row {
+  justify-content: flex-start;
 }
 .rover-controls .panel-note {
   margin: 0;
@@ -408,20 +492,12 @@
   max-height: calc(100% - var(--header-bottom) - 165px);
   overflow-y: auto;
 }
-.rover-controls button[aria-pressed="true"] {
-  background: #2d5148;
-  color: #e1fff1;
-}
 .rover-controls .field {
   margin: 0;
   font-size: 0.875rem;
 }
 .rover-controls input {
   width: 100%;
-}
-.roaming-strip button {
-  color: #bbdfd0;
-  padding: 5px 0;
 }
 .roaming-strip p {
   flex: 1 0 100%;

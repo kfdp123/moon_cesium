@@ -89,7 +89,7 @@ function move(index: number, step: number) {
 <template>
   <section class="panel-section">
     <div class="compact-row">
-      <button class="secondary-button" @click="saveConfig">保存图层配置</button
+      <button class="primary-button" @click="saveConfig">保存图层配置</button
       ><button class="text-button" @click="catalog.restoreMaps()">
         恢复内置图层
       </button>
@@ -142,7 +142,7 @@ function move(index: number, step: number) {
                 }}</label
               >
               <button
-                class="tree-settings"
+                class="tree-settings icon-button"
                 :aria-label="`${layer.name}设置`"
                 :aria-expanded="selected === layer.id"
                 @click="selected = selected === layer.id ? null : layer.id"
@@ -175,12 +175,14 @@ function move(index: number, step: number) {
                   >来源 ↗</a
                 ><span>叠放 {{ catalog.mapLayers.indexOf(layer) + 1 }}</span
                 ><button
+                  class="icon-button"
                   :aria-label="`${layer.name}下移`"
                   :disabled="catalog.mapLayers.indexOf(layer) === 0"
                   @click="move(catalog.mapLayers.indexOf(layer), -1)"
                 >
                   ↓</button
                 ><button
+                  class="icon-button"
                   :aria-label="`${layer.name}上移`"
                   :disabled="
                     catalog.mapLayers.indexOf(layer) ===
@@ -190,6 +192,7 @@ function move(index: number, step: number) {
                 >
                   ↑</button
                 ><button
+                  class="text-button danger-button"
                   @click="
                     catalog.mapLayers.splice(
                       catalog.mapLayers.indexOf(layer),

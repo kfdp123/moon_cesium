@@ -15,7 +15,13 @@ const links = defineModel<ResourceLink[]>({ required: true });
         v-model="link.url"
         aria-label="资料地址"
         placeholder="https://…"
-      /><button type="button" @click="links.splice(index, 1)">删除</button>
+      /><button
+        class="text-button danger-button"
+        type="button"
+        @click="links.splice(index, 1)"
+      >
+        删除
+      </button>
     </div>
     <button
       type="button"

@@ -54,6 +54,22 @@ function scrub(event: Event) {
 watch(() => astronomy.command, refresh);
 onMounted(() => {
   timeline = new Timeline(host.value!, astronomy.clock);
+  // Cesium 1.132 formats ticks through this untyped instance hook. Keep it
+  // local to this widget; zooming and resizing still measure the actual labels.
+  Object.assign(timeline, {
+    makeLabel(this: { _timeBarSecondsSpan: number }, time: JulianDate) {
+      const d = JulianDate.toGregorianDate(time);
+      const day = `${d.year}年${d.month}月${d.day}日`;
+      if (this._timeBarSecondsSpan >= 172800) return day;
+      const pad = (value: number) => String(value).padStart(2, "0");
+      const fraction =
+        this._timeBarSecondsSpan < 3600 ? Math.floor(d.millisecond) : 0;
+      const seconds =
+        pad(d.second) +
+        (fraction ? `.${String(fraction).padStart(3, "0")}` : "");
+      return `${day} ${pad(d.hour)}:${pad(d.minute)}:${seconds}`;
+    },
+  });
   host.value!.addEventListener("settime", scrub);
   fit();
   refresh();
@@ -109,7 +125,8 @@ onBeforeUnmount(() => {
         {{ expanded ? "收起时间轴" : "展开时间轴" }}
       </button>
       <label v-show="expanded"
-        >UTC<input
+        >世界时<input
+          title="协调世界时（UTC）"
           ref="dateInput"
           type="datetime-local"
           aria-label="模拟日期 UTC"

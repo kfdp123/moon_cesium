@@ -1,6 +1,7 @@
 # Local source material and development tools
 /tmp/
 /files/
+/moon-web/files/
 /资料收集/
 /UE5_Cesium_PixelStreaming_Moon_Web_Demo_Implementation_Plan.md
 /月球可视化/
@@ -15,6 +16,7 @@ dist/
 __pycache__/
 *.pyc
 test-results/
+/moon-web/web/tmp/
 playwright-report/
 *.log
 moon-web/data/raw/

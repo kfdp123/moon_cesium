@@ -27,7 +27,15 @@ test("interior exhibit expands, focuses and returns to exploration", async ({
   await expect(page.locator(".floating-detail")).toHaveCount(0);
   await page.getByRole("button", { name: "合拢圈层", exact: true }).click();
   for (const mode of ["full", "half", "quarter", "full", "half"]) {
-    await page.getByLabel("展台剖切", { exact: true }).selectOption(mode);
+    const labels = { full: "完整球", half: "半球", quarter: "四分之一" };
+    const option = page
+      .getByRole("group", { name: "展台剖切", exact: true })
+      .getByRole("button", {
+        name: labels[mode as keyof typeof labels],
+        exact: true,
+      });
+    await option.click();
+    await expect(option).toHaveAttribute("aria-pressed", "true");
     await page.waitForTimeout(400);
   }
   await page.locator(".timeline-track button").first().click();

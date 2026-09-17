@@ -24,7 +24,7 @@
   align-items: center;
   gap: 8px;
   padding-right: 10px;
-  background: #182932;
+  background: #1b2b3e;
   border-radius: 5px;
 }
 .tree-group-heading button {
@@ -35,7 +35,11 @@
   padding: 12px 8px;
   text-align: left;
   font-size: 1rem;
-  color: #c6ded9;
+  color: #d5e1ef;
+}
+.tree-group-heading button:hover {
+  background: var(--control-hover);
+  border-radius: var(--control-radius);
 }
 .tree-group-heading small {
   color: #7f989f;
@@ -60,12 +64,12 @@
   cursor: pointer;
 }
 .tree-settings {
-  padding: 10px 7px;
-  color: #a0bbb7;
+  padding: 10px;
 }
 .tree-settings[aria-expanded="true"] {
-  background: #29453f;
-  border-radius: 4px;
+  background: var(--selected-bg);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 .tree-leaf .layer-status {
   margin: 0 0 5px 25px;
@@ -103,19 +107,19 @@
   font: inherit;
 }
 input[type="checkbox"] {
-  accent-color: #b8dacf;
+  accent-color: var(--accent);
   width: 20px;
   height: 20px;
   flex-shrink: 0;
 }
 input[type="range"] {
   width: 130px;
-  accent-color: #b8dacf;
+  accent-color: var(--accent);
 }
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid #b8dacf;
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 .horizontal {
@@ -146,18 +150,18 @@ textarea:focus-visible {
   flex-shrink: 0;
 }
 .text-button {
-  display: inline-block;
-  color: #a9c7c0;
-  font-size: 0.875rem;
-  padding: 8px 7px 8px 0;
-}
-.secondary-button {
-  padding: 9px 12px;
-  border: 1px solid #42605e;
-  border-radius: 5px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  border-radius: var(--control-radius);
+  color: var(--accent);
   font-size: 1rem;
-  color: #c4ddd5;
-  margin: 8px 0;
+  padding: 8px;
+}
+.text-button:hover:not(:disabled) {
+  background: var(--control-hover);
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 .form-error {
   color: #f3ad93 !important;
@@ -279,9 +283,9 @@ summary {
   color: #a6bac6;
 }
 .model-preview {
-  height: 280px;
+  height: 300px;
   position: relative;
-  margin-top: 10px;
+  margin-top: 0;
 }
 .model-canvas {
   position: absolute;
@@ -295,6 +299,77 @@ summary {
   font-size: 0.875rem;
   margin: 0;
   pointer-events: none;
+  right: 12px;
+  max-height: 150px;
+  overflow: auto;
+  padding: 8px;
+  background: #17212bea;
+}
+.point-model-card {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #17212b;
+}
+.model-thumbnail {
+  display: block;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 8/5;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+  background: #17212b;
+}
+.model-thumbnail > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 180ms;
+}
+.model-thumbnail:hover > img {
+  transform: scale(1.04);
+}
+.model-thumbnail-action {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  padding: 9px 16px;
+  white-space: nowrap;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-radius: 24px;
+  box-shadow: 0 3px 16px #0006;
+  font-weight: 600;
+}
+.model-thumbnail-placeholder {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  padding-bottom: 32px;
+}
+.point-model-caption {
+  padding: 12px 14px;
+  border-top: 1px solid var(--line);
+}
+.point-model-caption strong {
+  font-size: 1rem;
+}
+.point-model-caption p {
+  margin: 6px 0 0;
+  font-size: 0.875rem;
+  color: var(--muted);
 }
 .navigation-card {
   width: 100%;
@@ -315,8 +390,9 @@ summary {
   line-height: 1.8;
 }
 .navigation-card.active {
-  border-color: #b8dacf;
-  background: #19302e;
+  border-color: var(--accent);
+  background: var(--selected-bg);
+  box-shadow: inset 3px 0 var(--accent);
 }
 .scene-message {
   z-index: 10;
@@ -341,8 +417,10 @@ summary {
   padding: 16px;
   margin: 16px 0;
 }
-.parameter-panel > .secondary-button {
+.parameter-panel > .secondary-button,
+.parameter-panel > .primary-button {
   width: 100%;
+  margin-block: 6px;
 }
 input[type="range"] {
   min-height: 28px;
@@ -351,10 +429,7 @@ input[type="number"] {
   font-variant-numeric: tabular-nums;
 }
 .point-row > button:last-child {
-  min-height: 40px;
   padding: 8px;
-  background: #1d3441;
-  border-radius: 5px;
 }
 .tree-leaf .checkbox-row {
   min-height: 44px;
@@ -366,8 +441,8 @@ input[type="number"] {
   min-height: 46px;
 }
 .tree-layer-settings .compact-row button {
-  min-width: 34px;
-  min-height: 36px;
+  min-width: 44px;
+  min-height: 44px;
 }
 .catalog-import {
   padding: 12px;
@@ -376,11 +451,12 @@ input[type="number"] {
   margin: 10px 0 18px;
 }
 .navigation-card {
-  background: #172d38;
+  background: #192839;
   padding: 18px;
 }
 .navigation-card:hover {
-  border-color: #759a91;
+  border-color: #8da4bc;
+  background: var(--control-hover);
 }
 .resource-row input {
   font-size: 0.9375rem;
@@ -423,12 +499,12 @@ input[type="number"] {
   margin-bottom: 6px;
 }
 .astro-playback .play-button {
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
 }
 .astro-playback .icon-button {
-  min-width: 36px;
-  min-height: 38px;
+  min-width: 44px;
+  min-height: 44px;
 }
 .astro-playback label {
   display: flex;

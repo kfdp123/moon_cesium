@@ -52,15 +52,20 @@ test("parameter scene, catalogs, model and navigation", async ({ page }) => {
   await expect(page.getByLabel("月壳厚度", { exact: true })).toHaveValue(
     "80.0",
   );
-  await page.getByRole("button", { name: "点位管理", exact: true }).click();
+  await page.getByRole("button", { name: "科普探索", exact: true }).click();
   await page
-    .getByRole("button", { name: "阿波罗 11 号着陆点 着陆点", exact: true })
+    .locator(".point-title")
+    .filter({ hasText: "阿波罗 11 号着陆点" })
     .click();
   await expect(
     page.getByRole("heading", { name: "阿波罗 11 号着陆点" }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "打开模型预览" }).click();
-  await expect(page.getByText("正在加载模型…")).toHaveCount(0, {
+  await page
+    .getByRole("button", { name: "加载阿波罗登月舱", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "聚焦模型", exact: true }),
+  ).toBeEnabled({
     timeout: 20000,
   });
   await page.waitForTimeout(2000);
@@ -84,11 +89,8 @@ test("parameter scene, catalogs, model and navigation", async ({ page }) => {
   await page.getByRole("button", { name: "图层管理", exact: true }).click();
   await page.getByLabel("LOLA 三维高程 · 0.25°", { exact: true }).check();
   await expect(
-    page
-      .locator(".catalog-layer")
-      .filter({ hasText: "LOLA 三维高程 · 0.25°" })
-      .getByText("已加载", { exact: true }),
-  ).toBeVisible();
+    page.getByLabel("LOLA 三维高程 · 0.25°", { exact: true }),
+  ).toBeChecked();
   await page.waitForTimeout(1500);
   await page.screenshot({ path: "test-results/05-dem.png" });
   expect(errors).toEqual([]);

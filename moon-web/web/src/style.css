@@ -3,12 +3,20 @@
 :root {
   font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif;
   font-size: 16px;
-  color: #e1e9ed;
+  color: #edf3f8;
   background: #080f16;
   font-synthesis: none;
-  --muted: #a2b3bf;
-  --line: #2a3a46;
-  --accent: #b8dfd2;
+  --muted: #b0bfd0;
+  --line: #35465b;
+  --accent: #73d9e7;
+  --accent-ink: #08232b;
+  --accent-hover: #a2eaf2;
+  --control-bg: #243246;
+  --control-hover: #33465e;
+  --control-border: #4b6078;
+  --selected-bg: #193b50;
+  --control-radius: 9px;
+  color-scheme: dark;
 }
 :root:has(.large-text) {
   font-size: 18px;
@@ -33,17 +41,18 @@ button {
   background: none;
 }
 button:disabled {
-  opacity: 0.4;
+  opacity: 0.45;
   cursor: default;
 }
 button,
 a {
   transition:
     background 0.15s,
-    color 0.15s;
+    color 0.15s,
+    border-color 0.15s,
+    box-shadow 0.15s;
   -webkit-tap-highlight-color: transparent;
 }
-button:hover:not(:disabled),
 a:hover {
   color: #fff;
 }
@@ -72,7 +81,7 @@ svg {
   display: grid;
   place-items: center;
   color: var(--accent);
-  border: 1px solid #65887d;
+  border: 1px solid var(--control-border);
   border-radius: 50%;
 }
 .brand strong {
@@ -86,11 +95,12 @@ svg {
   min-width: 44px;
   min-height: 44px;
   padding: 10px;
-  border-radius: 8px;
-  color: #b2c8d2;
+  border-radius: var(--control-radius);
+  color: #c5d3e2;
 }
 .icon-button:hover:not(:disabled) {
-  background: #29404d;
+  background: var(--control-hover);
+  color: #fff;
 }
 .panel-heading {
   display: flex;
@@ -148,17 +158,18 @@ svg {
   flex-direction: column;
   gap: 8px;
   padding: 9px 4px;
-  border: 1px solid #3a515f;
-  border-radius: 8px;
-  background: #101b24;
+  border: 1px solid var(--control-border);
+  border-radius: var(--control-radius);
+  background: var(--control-bg);
 }
 .cutaway-options small {
   font-size: 0.875rem;
 }
 .cutaway-options button.active {
-  border-color: #91c9b3;
-  background: #28443e;
-  color: #dffff0;
+  border-color: var(--accent);
+  background: var(--selected-bg);
+  color: var(--accent);
+  box-shadow: inset 0 -3px var(--accent);
 }
 .cut-icon {
   width: 20px;
@@ -267,12 +278,12 @@ svg {
   width: 48px;
   height: 48px;
   flex-shrink: 0;
-  border: 1px solid #83b8a0;
+  border: 1px solid var(--accent);
   border-radius: 50%;
   display: grid;
   place-items: center;
-  color: #d0f7e7;
-  background: #294b40;
+  color: var(--accent-ink);
+  background: var(--accent);
 }
 .timeline-label {
   width: 180px;
@@ -299,10 +310,10 @@ svg {
   align-items: flex-start;
   flex-direction: column;
   padding: 10px 16px;
-  border: 1px solid #324a54;
-  border-radius: 8px;
-  color: #b5c8d1;
-  background: #101c25;
+  border: 1px solid var(--control-border);
+  border-radius: var(--control-radius);
+  color: #d4deea;
+  background: #192839;
   text-align: left;
 }
 .timeline-track strong {
@@ -315,9 +326,10 @@ svg {
   margin-top: 5px;
 }
 .timeline-track button.active {
-  background: #2b4840;
-  color: #e0ffed;
-  border-color: #86b49d;
+  background: var(--selected-bg);
+  color: var(--accent);
+  border-color: var(--accent);
+  box-shadow: inset 0 -3px var(--accent);
 }
 .timeline-node {
   display: none;
@@ -354,17 +366,91 @@ svg {
     transform: rotate(360deg);
   }
 }
-.primary-button {
+.primary-button,
+.secondary-button {
   display: inline-flex;
   justify-content: center;
   align-items: center;
   gap: 8px;
   min-height: 44px;
   padding: 10px 18px;
-  border-radius: 7px;
-  background: #a8d6c3;
-  color: #10251d;
-  font-weight: 500;
+  border: 1px solid var(--control-border);
+  border-radius: var(--control-radius);
+  background: var(--control-bg);
+  color: #edf3f8;
+  font-size: 1rem;
+  font-weight: 600;
+}
+.primary-button {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.primary-button:hover:not(:disabled),
+.play-button:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: var(--accent-ink);
+}
+.secondary-button:hover:not(:disabled),
+.cutaway-options button:hover:not(:disabled),
+.timeline-track button:hover:not(:disabled) {
+  background: var(--control-hover);
+  border-color: #8da4bc;
+}
+.secondary-button[aria-pressed="true"] {
+  background: var(--selected-bg);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.primary-button:active:not(:disabled),
+.secondary-button:active:not(:disabled),
+.play-button:active:not(:disabled) {
+  box-shadow: inset 0 2px 5px #0005;
+}
+:is(.text-button, .icon-button).danger-button {
+  color: #f1a9a9;
+}
+.danger-button:hover:not(:disabled) {
+  background: #512d38;
+  color: #ffd5d5;
+}
+/* Mode choices share one selected-state vocabulary across scenes. */
+.segmented-control {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #0e1928;
+}
+.segmented-control button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--control-radius);
+  color: #c1cede;
+  white-space: nowrap;
+}
+.segmented-control button:hover:not(:disabled) {
+  background: var(--control-hover);
+}
+.segmented-control button[aria-pressed="true"] {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--selected-bg);
+  box-shadow: inset 0 -2px var(--accent);
+}
+@media (prefers-reduced-motion: reduce) {
+  button,
+  a {
+    transition: none;
+  }
 }
 .modal-backdrop {
   position: fixed;
