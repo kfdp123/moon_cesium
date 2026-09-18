@@ -2,9 +2,10 @@ import { ref } from "vue";
 import { defineStore } from "pinia";
 import { defaultMapLayers, parseMapLayers } from "../data/mapLayers";
 import { parsePoints, pointsGeoJson } from "../data/pointFiles";
+import { pruneRetiredPoints } from "../data/pointCatalogMigration";
 import type { LunarPoint, MapLayer } from "../types";
 import legacyContent from "../data/legacyPointContent.json";
-const contentVersion = "2";
+const contentVersion = "3";
 
 export const useCatalog = defineStore("catalog", () => {
   const points = ref<LunarPoint[]>([]);
@@ -64,6 +65,17 @@ export const useCatalog = defineStore("catalog", () => {
             links: unchanged("links") ? original.links : point.links,
           };
         });
+        // The old catalog is fetched only for migration, never bundled or shown.
+        const migration = await fetch("/data/migrations/point-catalog-v2.json");
+        if (!migration.ok)
+          throw new Error(`点位目录迁移失败：HTTP ${migration.status}`);
+        const builtInIds = new Set(builtIn.map((point) => point.id));
+        points.value = pruneRetiredPoints(
+          points.value,
+          parsePoints(await migration.json()).filter(
+            (point) => !builtInIds.has(point.id),
+          ),
+        );
         savePoints();
       } else {
         points.value = builtIn;

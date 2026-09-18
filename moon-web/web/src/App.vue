@@ -27,6 +27,7 @@ import {
   Compass,
   ChevronLeft,
   ChevronRight,
+  Database,
 } from "@lucide/vue";
 import MoonViewport from "./components/MoonViewport.vue";
 import GeologyViewport from "./components/GeologyViewport.vue";
@@ -52,12 +53,17 @@ import { useCatalog } from "./stores/catalog";
 import { epochs } from "./data/moon";
 import type { CutawayMode, NavigationMode, LunarPoint } from "./types";
 import type { PointModelState } from "./scene/PointModelLayer";
+import ScientificDataPanel from "./components/ScientificDataPanel.vue";
+import { useScienceData } from "./stores/scienceData";
+import type { ScientificQueryState } from "./scene/MoonScene";
 const explorer = useExplorer();
 const catalog = useCatalog();
 const astronomy = useAstronomy();
 const tour = useEvolutionTour();
+const science = useScienceData();
 const viewport = ref<InstanceType<typeof MoonViewport>>();
 const mapModelState = ref<PointModelState | null>(null);
+const scientificQuery = ref<ScientificQueryState | null>(null);
 const orbitalViewport = ref<InstanceType<typeof OrbitalViewport>>();
 const geologyViewport = ref<InstanceType<typeof GeologyViewport>>();
 const geologyOpen = ref(false);
@@ -69,13 +75,19 @@ const activeViewport = computed(() =>
   modelOpen.value
     ? modelViewport.value
     : geologyOpen.value
-    ? geologyViewport.value
-    : astronomy.view === "moon"
-      ? viewport.value
-      : orbitalViewport.value,
+      ? geologyViewport.value
+      : astronomy.view === "moon"
+        ? viewport.value
+        : orbitalViewport.value,
 );
 type SceneMode = "explore" | "interior" | "roam" | "system";
-type Tool = "parameters" | "maps" | "points" | "scenes" | "astronomy";
+type Tool =
+  | "parameters"
+  | "maps"
+  | "points"
+  | "science"
+  | "scenes"
+  | "astronomy";
 const sceneMode = ref<SceneMode>("explore");
 const tab = ref<Tool | null>(null);
 const welcomeOpen = ref(true);
@@ -124,7 +136,10 @@ const tools = computed(() => {
     { id: "maps", label: "图层管理", icon: Layers },
     { id: "points", label: "科普探索", icon: MapPin },
     ...(sceneMode.value === "explore"
-      ? [{ id: "astronomy" as const, label: "光照设置", icon: Sun }]
+      ? [
+          { id: "science" as const, label: "科研数据", icon: Database },
+          { id: "astronomy" as const, label: "光照设置", icon: Sun },
+        ]
       : []),
   ] as const;
 });
@@ -132,6 +147,7 @@ const toolTitle: Record<Tool, string> = {
   parameters: "月球参数模型",
   maps: "图层管理",
   points: "科普探索",
+  science: "科研数据",
   scenes: "漫游方式",
   astronomy: "光照与运动设置",
 };
@@ -139,6 +155,7 @@ const toolCaption: Record<Tool, string> = {
   parameters: "参数",
   maps: "图层",
   points: "科普",
+  science: "科研",
   scenes: "漫游",
   astronomy: "光照",
 };
@@ -148,6 +165,15 @@ const sceneName = computed(
 function closeDetails() {
   explorer.selectedLayer = null;
   explorer.selectedLandmark = null;
+  scientificQuery.value = null;
+  viewport.value?.cancelScientificQuery();
+}
+function showScientificQuery(value: ScientificQueryState | null) {
+  scientificQuery.value = value;
+  if (value) welcomeOpen.value = false;
+}
+function coordinateLabel(value: number, positive: string, negative: string) {
+  return `${Math.abs(value).toFixed(2)}°${value < 0 ? negative : positive}`;
 }
 function openGeology() {
   tour.stop();
@@ -177,6 +203,8 @@ watch(
   () => [explorer.selectedLayer, explorer.selectedLandmark],
   ([layer, point]) => {
     if (layer || point) {
+      scientificQuery.value = null;
+      viewport.value?.cancelScientificQuery();
       tab.value = null;
       welcomeOpen.value = false;
     }
@@ -464,6 +492,7 @@ async function downloadImage() {
 }
 onMounted(() => {
   void catalog.load();
+  void science.load();
   try {
     explorer.loadModels();
   } catch (cause) {
@@ -503,9 +532,11 @@ onBeforeUnmount(() => {
       <MoonViewport
         v-else-if="astronomy.view === 'moon'"
         ref="viewport"
+        :science-enabled="sceneMode === 'explore'"
         @ready="ready = true"
         @interact="pause"
         @point-model="mapModelState = $event"
+        @scientific-query="showScientificQuery"
       />
       <OrbitalViewport
         v-else
@@ -730,6 +761,7 @@ onBeforeUnmount(() => {
         ></template
       >
       <PointPanel v-if="tab === 'points'" @locate="locate" />
+      <ScientificDataPanel v-if="tab === 'science'" />
       <AstronomyPanel v-if="tab === 'astronomy'" @base="inspectBase" />
       <section v-if="tab === 'scenes'" class="panel-section">
         <div class="section-label">场景漫游</div>
@@ -756,22 +788,41 @@ onBeforeUnmount(() => {
       v-if="
         !exhibitOpen &&
         astronomy.view === 'moon' &&
-        (explorer.selection || landmark)
+        (explorer.selection || landmark || scientificQuery)
       "
       class="detail-card rich-detail floating-detail"
     >
       <button
         class="icon-button detail-close"
         aria-label="关闭详情"
-        @click="
-          explorer.selectedLayer = null;
-          explorer.selectedLandmark = null;
-        "
+        @click="closeDetails"
       >
         <X :size="16" />
       </button>
+      <section v-if="scientificQuery" class="scientific-query-card">
+        <span class="eyebrow">科研数据查询</span>
+        <h3>
+          {{ coordinateLabel(scientificQuery.longitude, "E", "W") }} ·
+          {{ coordinateLabel(scientificQuery.latitude, "N", "S") }}
+        </h3>
+        <p v-if="scientificQuery.error" class="form-error">
+          {{ scientificQuery.error }}
+        </p>
+        <dl v-else-if="scientificQuery.results.length">
+          <div v-for="result in scientificQuery.results" :key="result.id">
+            <dt>{{ result.title }}</dt>
+            <dd>
+              {{ result.value === null ? "无数据" : result.value.toFixed(3) }}
+              <span v-if="result.units">{{ result.units }}</span>
+            </dd>
+          </div>
+        </dl>
+        <p v-else class="panel-note">
+          请先在科研数据面板中勾选需要查询的图层。
+        </p>
+      </section>
       <PointDetails
-        v-if="landmark"
+        v-else-if="landmark"
         :point="landmark"
         :model-state="mapModelState"
         @load-model="loadPointModel(landmark)"

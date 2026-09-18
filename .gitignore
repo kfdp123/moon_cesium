@@ -17,6 +17,8 @@ __pycache__/
 *.pyc
 test-results/
 /moon-web/web/tmp/
+/moon-web/web/public/data/cesium_data/
+/moon-web/web/public/data/migrations/
 playwright-report/
 *.log
 moon-web/data/raw/

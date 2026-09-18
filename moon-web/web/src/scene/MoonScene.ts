@@ -25,6 +25,7 @@ import {
   Clock,
   ClockViewModel,
 } from "cesium";
+import type { Cartographic } from "cesium";
 import { MOON_RADIUS_M } from "../data/moon";
 import type {
   MapLayer,
@@ -42,6 +43,19 @@ import { InteriorExhibit } from "./InteriorExhibit";
 import { LunarEvolution } from "./LunarEvolution";
 import { PointModelLayer, type PointModelState } from "./PointModelLayer";
 import { PointFeatureLayer, type PointHover } from "./PointFeatureLayer";
+import {
+  ScientificDataLayers,
+  type ScientificQueryResult,
+  type ScientificLayerState,
+} from "./ScientificDataLayers";
+import type { CesiumCatalog } from "../data/cesiumCatalog";
+
+export interface ScientificQueryState {
+  longitude: number;
+  latitude: number;
+  results: ScientificQueryResult[];
+  error?: string;
+}
 
 function geometry(mesh: ShellMesh): Geometry {
   const attributes = new GeometryAttributes();
@@ -84,6 +98,8 @@ export class MoonScene {
   private readonly evolution: LunarEvolution;
   private readonly pointModels: PointModelLayer;
   private readonly pointFeatures: PointFeatureLayer;
+  private readonly scientificData: ScientificDataLayers;
+  private scientificQueryRevision = 0;
 
   constructor(
     container: HTMLElement,
@@ -93,6 +109,13 @@ export class MoonScene {
     clock: Clock,
     reportPointModel: (state: PointModelState | null) => void,
     reportHover: (hover: PointHover | null) => void = () => {},
+    reportScientificQuery: (
+      state: ScientificQueryState | null,
+    ) => void = () => {},
+    reportScientificLayer: (
+      id: string,
+      state: { loading: boolean; error?: string },
+    ) => void = () => {},
   ) {
     Ellipsoid.default = Ellipsoid.MOON;
     this.clockModel = new ClockViewModel(clock);
@@ -142,6 +165,11 @@ export class MoonScene {
     this.evolution = new LunarEvolution(this.viewer, this.layerPrimitives);
     this.pointModels = new PointModelLayer(this.viewer, reportPointModel);
     this.pointFeatures = new PointFeatureLayer(this.viewer);
+    this.scientificData = new ScientificDataLayers(this.viewer, {
+      baseUrl: "/data/cesium_data/",
+      catalogUrl: "/data/cesium_data/catalog.json",
+      reportLayer: reportScientificLayer,
+    });
     this.viewer.screenSpaceEventHandler.removeInputAction(
       ScreenSpaceEventType.LEFT_DOUBLE_CLICK,
     );
@@ -151,20 +179,38 @@ export class MoonScene {
         const id: unknown = hit?.id?.id ?? hit?.id;
         if (typeof id !== "string") {
           onSelection(null);
+          const ray = scene.camera.getPickRay(position);
+          const cartesian =
+            ray && scene.globe.show ? scene.globe.pick(ray, scene) : undefined;
+          if (cartesian) {
+            const cartographic =
+              scene.globe.ellipsoid.cartesianToCartographic(cartesian);
+            void this.queryScientificData(cartographic, reportScientificQuery);
+          } else {
+            this.cancelScientificQuery();
+            reportScientificQuery(null);
+          }
           return;
         }
         if (this.navigationMode === "base-tour" && id.startsWith("base:")) {
+          this.cancelScientificQuery();
           this.navigation.selectBase(id.slice(5));
           return;
         }
-        if (id.startsWith("layer:"))
+        if (id.startsWith("layer:")) {
+          this.cancelScientificQuery();
           onSelection({ kind: "layer", id: id.slice(6) });
-        else if (this.pointFeatures.pointId(id)) {
+        } else if (this.pointFeatures.pointId(id)) {
+          this.cancelScientificQuery();
           const pointId = this.pointFeatures.pointId(id)!;
           onSelection({ kind: "landmark", id: pointId });
           if (!id.startsWith("landmark:") || !hit?.primitive?.ready)
             this.flyToLandmark(pointId);
-        } else onSelection(null);
+        } else {
+          this.cancelScientificQuery();
+          onSelection(null);
+          reportScientificQuery(null);
+        }
       },
       ScreenSpaceEventType.LEFT_CLICK,
     );
@@ -203,6 +249,18 @@ export class MoonScene {
     this.maps = layers;
     await this.mapLayers.apply(layers, force);
     this.pointModels.updateGround();
+  }
+
+  async applyScientificLayers(
+    layers: ScientificLayerState[],
+    catalog?: CesiumCatalog,
+    baseUrl?: string,
+  ) {
+    await this.scientificData.apply(layers, catalog, baseUrl);
+  }
+
+  cancelScientificQuery() {
+    this.scientificQueryRevision++;
   }
 
   applyState(state: SceneState) {
@@ -361,6 +419,7 @@ export class MoonScene {
     this.pointModels.clear();
   }
   dispose() {
+    this.cancelScientificQuery();
     this.pointModels.dispose();
     this.pointFeatures.dispose();
     this.exhibit.dispose();
@@ -368,8 +427,35 @@ export class MoonScene {
     this.lighting.dispose();
     this.navigation.dispose();
     this.mapLayers.dispose();
+    this.scientificData.dispose();
     this.viewer.destroy();
     this.clockModel.destroy();
+  }
+
+  private async queryScientificData(
+    cartographic: Cartographic,
+    report: (state: ScientificQueryState | null) => void,
+  ) {
+    const revision = ++this.scientificQueryRevision;
+    const longitude = (cartographic.longitude * 180) / Math.PI;
+    const latitude = (cartographic.latitude * 180) / Math.PI;
+    if (!this.scientificData.getActiveLayers().length) {
+      if (revision === this.scientificQueryRevision) report(null);
+      return;
+    }
+    try {
+      const results = await this.scientificData.query(longitude, latitude);
+      if (revision === this.scientificQueryRevision)
+        report({ longitude, latitude, results });
+    } catch (cause) {
+      if (revision === this.scientificQueryRevision)
+        report({
+          longitude,
+          latitude,
+          results: [],
+          error: cause instanceof Error ? cause.message : String(cause),
+        });
+    }
   }
 
   private buildInterior(state: SceneState) {

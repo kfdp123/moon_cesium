@@ -12,6 +12,7 @@ import { loadLunarTerrain } from "./lunarTerrain";
 export class MapLayers {
   private revision = 0;
   private signature = "";
+  private imagery: ImageryLayer[] = [];
   constructor(
     private viewer: Viewer,
     private report: (id: string, status: string) => void,
@@ -22,7 +23,7 @@ export class MapLayers {
     this.signature = signature;
     const revision = ++this.revision;
     const ellipsoid = this.viewer.scene.globe.ellipsoid;
-    this.viewer.imageryLayers.removeAll();
+    this.clearImagery();
     this.viewer.terrainProvider = new EllipsoidTerrainProvider({ ellipsoid });
     for (const layer of layers) {
       if (!layer.visible) {
@@ -51,9 +52,9 @@ export class MapLayers {
           provider.errorEvent.addEventListener(() =>
             this.report(layer.id, "部分瓦片加载失败，请检查网络或重试"),
           );
-          this.viewer.imageryLayers.add(
-            new ImageryLayer(provider, { alpha: layer.opacity }),
-          );
+          const imagery = new ImageryLayer(provider, { alpha: layer.opacity });
+          this.viewer.imageryLayers.add(imagery, this.imagery.length);
+          this.imagery.push(imagery);
         }
         this.report(
           layer.id,
@@ -68,5 +69,12 @@ export class MapLayers {
   }
   dispose() {
     this.revision++;
+    this.clearImagery();
+  }
+
+  private clearImagery() {
+    for (const layer of this.imagery)
+      this.viewer.imageryLayers.remove(layer, true);
+    this.imagery = [];
   }
 }

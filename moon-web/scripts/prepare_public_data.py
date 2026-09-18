@@ -23,8 +23,8 @@ for place in tree.findall('.//k:Placemark', ns):
     kind = fields['type'].lower()
     code = 'CR' if kind.startswith('crater') else 'MA' if kind.startswith('mare') else 'OC' if kind.startswith('oceanus') else ''
     if code not in ('CR', 'MA', 'OC'): continue
-    # Curated subset keeps the interactive catalog legible. Full original remains downloadable at USGS.
-    if code == 'CR' and float(fields['diameter']) < 80 and name not in featured: continue
+    # Keep the seven named-feature exhibits alongside the eight mission sites.
+    if name not in featured: continue
     coords = [float(x) for x in place.find('k:Point/k:coordinates', ns).text.split(',')[:2]]
     category = '环形山' if code == 'CR' else '月海'
     url = fields['link'].replace('http:', 'https:')
@@ -60,6 +60,16 @@ for mission, lat, lon, name in [
         'source': coordinates_source, 'images': [], 'modelUrl': '',
         'references':[{'title':'LROC 人工目标坐标表（2016）','url':coordinates_source}], 'links':[],
     }})
+# Preserve curated descriptions and media when regenerating the compact catalog.
+# The migration baseline is kept outside the generated list and is never shown as a UI source.
+baseline = out / 'migrations' / 'point-catalog-v2.json'
+if baseline.exists():
+    previous = json.loads(baseline.read_text(encoding='utf-8'))
+    previous_by_id = {
+        feature['properties']['id']: feature
+        for feature in previous.get('features', [])
+    }
+    features = [previous_by_id.get(feature['properties']['id'], feature) for feature in features]
 (out / 'lunar-points.geojson').write_text(json.dumps({'type': 'FeatureCollection', 'features': features}, ensure_ascii=False, indent=2), encoding='utf-8')
 image = Image.open(root / 'tmp/ldem_4_uint.tif')
 assert image.size == (1440, 720)

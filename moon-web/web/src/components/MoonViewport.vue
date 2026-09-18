@@ -8,15 +8,23 @@ import type { PointModelState } from "../scene/PointModelLayer";
 import { MoonScene } from "../scene/MoonScene";
 import type { PointHover } from "../scene/PointFeatureLayer";
 import { pointStories } from "../data/pointStories";
+import { useScienceData } from "../stores/scienceData";
+import type { ScientificQueryState } from "../scene/MoonScene";
+
+const props = withDefaults(defineProps<{ scienceEnabled?: boolean }>(), {
+  scienceEnabled: true,
+});
 
 const emit = defineEmits<{
   ready: [];
   interact: [];
   pointModel: [state: PointModelState | null];
+  scientificQuery: [state: ScientificQueryState | null];
 }>();
 const explorer = useExplorer();
 const catalog = useCatalog();
 const astronomy = useAstronomy();
+const science = useScienceData();
 const lightOptions = () => ({
   lighting: astronomy.lighting,
   shadows: astronomy.shadows,
@@ -34,6 +42,11 @@ const hoverPosition = computed(() => ({
   top: `${Math.max(110, Math.min((hover.value?.y ?? 0) + 22, (container.value?.clientHeight ?? 800) - 240))}px`,
 }));
 let scene: MoonScene | undefined;
+const scientificLayerState = () =>
+  (props.scienceEnabled ? science.visibleLayers : []).map((layer) => ({
+    id: layer.id,
+    opacity: science.opacity[layer.id] ?? 0.78,
+  }));
 
 async function initialize() {
   status.value = "loading";
@@ -58,10 +71,16 @@ async function initialize() {
       (value) => {
         hover.value = value;
       },
+      (value) => emit("scientificQuery", value),
+      (id, state) => {
+        science.setLayerLoading(id, state.loading);
+        science.setLayerError(id, state.error ?? null);
+      },
     );
     scene.setLighting(lightOptions());
     scene.applyState({ ...explorer.sceneState, points: catalog.points });
     await scene.applyMaps(catalog.mapLayers);
+    void applyScientificData();
     status.value = "ready";
     emit("ready");
   } catch (cause) {
@@ -74,6 +93,18 @@ function retry() {
   scene?.dispose();
   scene = undefined;
   void initialize();
+}
+
+async function applyScientificData() {
+  try {
+    await scene?.applyScientificLayers(
+      scientificLayerState(),
+      science.catalog ?? undefined,
+      science.baseUrl,
+    );
+  } catch (cause) {
+    science.error = cause instanceof Error ? cause.message : String(cause);
+  }
 }
 
 watch(lightOptions, (options) => scene?.setLighting(options));
@@ -94,6 +125,15 @@ watch(
   (layers) => void scene?.applyMaps(layers),
   { deep: true },
 );
+watch(
+  () => [scientificLayerState(), explorer.sceneState.radiusKm],
+  () => {
+    scene?.cancelScientificQuery();
+    emit("scientificQuery", null);
+    void applyScientificData();
+  },
+  { deep: true },
+);
 onMounted(initialize);
 onBeforeUnmount(() => scene?.dispose());
 defineExpose({
@@ -107,6 +147,7 @@ defineExpose({
   loadPointModel: (point: LunarPoint) => scene?.loadPointModel(point),
   focusPointModel: () => scene?.focusPointModel(),
   clearPointModel: () => scene?.clearPointModel(),
+  cancelScientificQuery: () => scene?.cancelScientificQuery(),
   setTheme: (ids: string[]) => scene?.setExplorationTheme(ids),
 });
 </script>
