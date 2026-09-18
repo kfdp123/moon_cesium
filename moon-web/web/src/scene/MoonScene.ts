@@ -153,6 +153,10 @@ export class MoonScene {
           onSelection(null);
           return;
         }
+        if (this.navigationMode === "base-tour" && id.startsWith("base:")) {
+          this.navigation.selectBase(id.slice(5));
+          return;
+        }
         if (id.startsWith("layer:"))
           onSelection({ kind: "layer", id: id.slice(6) });
         else if (this.pointFeatures.pointId(id)) {
@@ -170,7 +174,11 @@ export class MoonScene {
         const id: unknown = hit?.id?.id ?? hit?.id;
         const pointId =
           typeof id === "string" ? this.pointFeatures.pointId(id) : null;
-        scene.canvas.style.cursor = pointId ? "pointer" : "";
+        const baseId =
+          this.navigationMode === "base-tour" &&
+          typeof id === "string" &&
+          id.startsWith("base:");
+        scene.canvas.style.cursor = pointId || baseId ? "pointer" : "";
         reportHover(
           pointId ? { id: pointId, x: endPosition.x, y: endPosition.y } : null,
         );

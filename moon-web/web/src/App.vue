@@ -30,6 +30,7 @@ import {
 } from "@lucide/vue";
 import MoonViewport from "./components/MoonViewport.vue";
 import GeologyViewport from "./components/GeologyViewport.vue";
+import LayeredModelViewport from "./components/LayeredModelViewport.vue";
 import { geologyExhibits } from "./data/lunarGeology";
 import ParameterPanel from "./components/ParameterPanel.vue";
 import MapPanel from "./components/MapPanel.vue";
@@ -39,6 +40,7 @@ import ExplorationWelcome from "./components/ExplorationWelcome.vue";
 import { explorationThemes } from "./data/pointStories";
 import AstronomyPanel from "./components/AstronomyPanel.vue";
 import RoverControls from "./components/RoverControls.vue";
+import BaseTourControls from "./components/BaseTourControls.vue";
 import InteriorControls from "./components/InteriorControls.vue";
 import EvolutionTour from "./components/EvolutionTour.vue";
 import { useEvolutionTour } from "./stores/evolutionTour";
@@ -59,9 +61,14 @@ const mapModelState = ref<PointModelState | null>(null);
 const orbitalViewport = ref<InstanceType<typeof OrbitalViewport>>();
 const geologyViewport = ref<InstanceType<typeof GeologyViewport>>();
 const geologyOpen = ref(false);
+const modelViewport = ref<InstanceType<typeof LayeredModelViewport>>();
+const modelOpen = ref(false);
+const exhibitOpen = computed(() => geologyOpen.value || modelOpen.value);
 const geologyStage = ref(2);
 const activeViewport = computed(() =>
-  geologyOpen.value
+  modelOpen.value
+    ? modelViewport.value
+    : geologyOpen.value
     ? geologyViewport.value
     : astronomy.view === "moon"
       ? viewport.value
@@ -104,7 +111,7 @@ const workspaces = [
   { id: "system", label: "地月运动", icon: Orbit },
 ] as const;
 const tools = computed(() => {
-  if (geologyOpen.value) return [];
+  if (exhibitOpen.value) return [];
   if (sceneMode.value === "system")
     return [{ id: "astronomy", label: "运动设置", icon: Settings }] as const;
   if (sceneMode.value === "roam")
@@ -150,8 +157,20 @@ function openGeology() {
   ready.value = false;
   geologyOpen.value = true;
 }
+function openModelExhibit() {
+  tour.stop();
+  pauseDate();
+  closeDetails();
+  tab.value = null;
+  ready.value = false;
+  modelOpen.value = true;
+}
 function closeGeology() {
   geologyOpen.value = false;
+  ready.value = false;
+}
+function closeModelExhibit() {
+  modelOpen.value = false;
   ready.value = false;
 }
 watch(
@@ -180,8 +199,9 @@ function selectWorkspace(value: SceneMode) {
   endExplorationTheme();
   welcomeOpen.value = value === "explore";
   const leavingInterior = sceneMode.value === "interior";
-  if (geologyOpen.value) {
+  if (exhibitOpen.value) {
     geologyOpen.value = false;
+    modelOpen.value = false;
     ready.value = false;
   }
   tour.stop();
@@ -249,7 +269,7 @@ const sceneModes: { id: NavigationMode; name: string; description: string }[] =
     {
       id: "base-tour",
       name: "环游月面基地",
-      description: "环绕月面基地，观察舱体、太阳能板和通信塔。",
+      description: "巡视生活舱、能源与通信设施，随时停下自由观察。",
     },
     {
       id: "third-person",
@@ -308,7 +328,7 @@ function navigate(mode: NavigationMode) {
   tab.value = null;
   closeDetails();
   pauseDate();
-  if (!shownRoamingHelp) {
+  if (!shownRoamingHelp && mode !== "base-tour" && mode !== "rover") {
     helpOpen.value = true;
     shownRoamingHelp = true;
   }
@@ -406,16 +426,20 @@ async function downloadImage() {
     context.fillStyle = "#fff";
     context.font = "14px sans-serif";
     context.fillText(
-      geologyOpen.value
-        ? `${geologyExhibits[geologyStage.value]!.name} · 月球局部构造`
+      exhibitOpen.value
+        ? modelOpen.value
+          ? "分层模型展台 · 月球结构"
+          : `${geologyExhibits[geologyStage.value]!.name} · 月球局部构造`
         : `${sceneName.value} · ${astronomy.view === "system" ? "地月全景" : explorer.epoch.age} · UTC ${astronomy.clock.currentTime.toString()}`,
       20,
       canvas.height - 53,
       canvas.width - 40,
     );
     context.fillText(
-      geologyOpen.value
-        ? "科学参考：NASA / LPI"
+      exhibitOpen.value
+        ? modelOpen.value
+          ? "模型资源：本地 GLB 文件"
+          : "科学参考：NASA / LPI"
         : astronomy.view === "system"
           ? "月球影像：NASA LRO · 地球影像：NASA Blue Marble 2004-09 · 运动/大气：模拟"
           : `现今月表来源：${catalog.mapLayers
@@ -427,8 +451,10 @@ async function downloadImage() {
       canvas.width - 40,
     );
     const link = document.createElement("a");
-    link.download = geologyOpen.value
-      ? `lunar-geology-${geologyExhibits[geologyStage.value]!.id}.png`
+    link.download = exhibitOpen.value
+      ? modelOpen.value
+        ? "lunar-layered-model.png"
+        : `lunar-geology-${geologyExhibits[geologyStage.value]!.id}.png`
       : `moon-${explorer.epoch.id}.png`;
     link.href = canvas.toDataURL("image/png");
     link.click();
@@ -467,6 +493,12 @@ onBeforeUnmount(() => {
         @ready="ready = true"
         @close="closeGeology"
         @stage="geologyStage = $event"
+      />
+      <LayeredModelViewport
+        v-else-if="modelOpen"
+        ref="modelViewport"
+        @ready="ready = true"
+        @close="closeModelExhibit"
       />
       <MoonViewport
         v-else-if="astronomy.view === 'moon'"
@@ -532,11 +564,12 @@ onBeforeUnmount(() => {
       </div>
     </header>
     <InteriorControls
-      v-if="sceneMode === 'interior' && !geologyOpen"
+      v-if="sceneMode === 'interior' && !exhibitOpen"
       @overview="viewport?.reset()"
       @local="openGeology"
+      @models="openModelExhibit"
     />
-    <EvolutionTour v-if="sceneMode === 'interior' && !geologyOpen" />
+    <EvolutionTour v-if="sceneMode === 'interior' && !exhibitOpen" />
     <ExplorationWelcome
       v-if="sceneMode === 'explore' && welcomeOpen && !tab && !landmark"
       :points="catalog.points"
@@ -721,7 +754,7 @@ onBeforeUnmount(() => {
     </aside>
     <div
       v-if="
-        !geologyOpen &&
+        !exhibitOpen &&
         astronomy.view === 'moon' &&
         (explorer.selection || landmark)
       "
@@ -774,6 +807,7 @@ onBeforeUnmount(() => {
     <div v-if="sceneMode === 'roam'" class="roaming-strip">
       <strong>{{ sceneModes.find((s) => s.id === navigation)?.name }}</strong>
       <RoverControls v-if="navigation === 'rover'" />
+      <BaseTourControls v-else-if="navigation === 'base-tour'" />
       <button v-else class="text-button" @click="helpOpen = !helpOpen">
         {{ helpOpen ? "收起操作说明" : "操作说明" }}
       </button>
@@ -787,7 +821,9 @@ onBeforeUnmount(() => {
       <button v-else class="primary-button" @click="openTool('scenes')">
         选择漫游方式
       </button>
-      <p v-if="helpOpen && navigation !== 'rover'">
+      <p
+        v-if="helpOpen && navigation !== 'rover' && navigation !== 'base-tour'"
+      >
         点击月面后 WASD 移动 · 方向键转头 · Shift
         加速。输入框获得焦点时不会触发步行。
       </p>
@@ -814,7 +850,7 @@ onBeforeUnmount(() => {
         <X :size="20" />
       </button>
     </div>
-    <div v-if="!geologyOpen" class="floating-time">
+    <div v-if="!exhibitOpen" class="floating-time">
       <AstroTimeline
         v-if="sceneMode !== 'interior'"
         :expanded="timeExpanded"
@@ -856,7 +892,7 @@ onBeforeUnmount(() => {
       }}
     </div>
     <div v-if="sceneMode !== 'system'" class="source-credit">
-      {{ geologyOpen ? "原创模型 · NASA / LPI 科学参考" : "NASA / USGS" }}
+      {{ exhibitOpen ? "模型资源 · 本地 GLB" : "NASA / USGS" }}
     </div>
     <div
       v-if="aboutOpen"

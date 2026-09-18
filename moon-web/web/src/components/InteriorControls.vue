@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { useExplorer } from "../stores/explorer";
 import { nextTick } from "vue";
-import { Check, Layers, Scan, Pause, Play } from "@lucide/vue";
+import { Check, Layers, Scan, Pause, Play, Box } from "@lucide/vue";
 import type { CutawayMode } from "../types";
 import { useEvolutionTour } from "../stores/evolutionTour";
 const tour = useEvolutionTour();
 const explorer = useExplorer();
-const emit = defineEmits<{ overview: []; local: [] }>();
+const emit = defineEmits<{ overview: []; local: []; models: [] }>();
 const cuts: { id: CutawayMode; label: string }[] = [
   { id: "full", label: "完整球" },
   { id: "half", label: "半球" },
@@ -107,6 +107,9 @@ async function expand() {
     </div>
     <button class="secondary-button local-geology-entry" @click="emit('local')">
       <Layers :size="19" aria-hidden="true" />局部构造
+    </button>
+    <button class="secondary-button local-geology-entry" @click="emit('models')">
+      <Box :size="19" aria-hidden="true" />分层模型
     </button>
   </section>
 </template>

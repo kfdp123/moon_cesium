@@ -8,6 +8,7 @@ import "./immersive.css";
 import "./geology.css";
 import "./exploration.css";
 import "./point-map.css";
+import "./base-tour.css";
 import App from "./App.vue";
 
 // All viewers use local/NASA data, with ion imagery and geocoding disabled.

@@ -18,6 +18,8 @@ import { terrainHeightAt } from "./lunarTerrain";
 import { regolithMaterial } from "./regolithMaterial";
 import { sunColorFragment } from "./sunAppearance";
 import { RoverNavigation } from "./RoverNavigation";
+import { LunarBaseModel } from "./LunarBaseModel";
+import { BaseTourNavigation } from "./BaseTourNavigation";
 
 /** Walk on the lunar globe. Only the base and astronaut are schematic geometry. */
 export class SurfaceNavigation {
@@ -33,6 +35,8 @@ export class SurfaceNavigation {
   private originalNear = 1;
   private sunlight = false;
   private rover?: RoverNavigation;
+  private base?: LunarBaseModel;
+  private baseTour?: BaseTourNavigation;
   private returnView?: {
     destination: Cartesian3;
     orientation: { direction: Cartesian3; up: Cartesian3 };
@@ -127,7 +131,18 @@ export class SurfaceNavigation {
     this.viewer.scene.globe.material = regolithMaterial(this.frame);
     this.heading = -0.48;
     this.pitch = 0.02;
-    this.createBase();
+    this.base = new LunarBaseModel(
+      this.viewer,
+      (local) => this.world(local),
+      this.sunlight,
+    );
+    if (mode === "third-person") this.createAvatar();
+    if (mode === "base-tour")
+      this.baseTour = new BaseTourNavigation(
+        this.viewer,
+        (local) => this.world(local),
+        this.base,
+      );
     if (mode === "rover")
       this.rover = new RoverNavigation(this.viewer, (local) =>
         this.world(local),
@@ -140,6 +155,7 @@ export class SurfaceNavigation {
   setLighting(enabled: boolean) {
     if (this.sunlight === enabled) return;
     this.sunlight = enabled;
+    this.base?.setLighting(enabled);
     for (let i = 0; i < this.models.length; i++)
       this.models.get(i).appearance = new PerInstanceColorAppearance({
         translucent: false,
@@ -151,6 +167,9 @@ export class SurfaceNavigation {
     this.position = new Cartesian3(-45, -65, 0);
     this.heading = 0.5;
     this.pitch = -0.1;
+  }
+  selectBase(id: string) {
+    this.baseTour?.select(id);
   }
   private world(local: Cartesian3) {
     const ellipsoid = this.viewer.scene.globe.ellipsoid;
@@ -200,42 +219,7 @@ export class SurfaceNavigation {
       }),
     );
   }
-  private createBase() {
-    for (const x of [-20, 20]) {
-      this.box(
-        new Cartesian3(x, 15, 5),
-        new Cartesian3(18, 28, 10),
-        Color.fromCssColorString("#c3cbd0"),
-      );
-      this.box(
-        new Cartesian3(x, 0.8, 4.5),
-        new Cartesian3(12, 0.5, 4),
-        Color.fromCssColorString("#244354"),
-      );
-      this.box(
-        new Cartesian3(x, 16, 10.4),
-        new Cartesian3(19, 30, 0.8),
-        Color.fromCssColorString("#e8a75a"),
-      );
-    }
-    this.box(
-      new Cartesian3(0, 15, 3),
-      new Cartesian3(23, 6, 6),
-      Color.fromCssColorString("#8999a1"),
-    );
-    for (const x of [-60, 60]) {
-      this.box(new Cartesian3(x, 12, 2), new Cartesian3(1, 1, 4), Color.SILVER);
-      this.box(
-        new Cartesian3(x, 12, 4),
-        new Cartesian3(20, 30, 0.3),
-        Color.fromCssColorString("#214f75"),
-      );
-    }
-    this.box(
-      new Cartesian3(0, 45, 14),
-      new Cartesian3(0.5, 0.5, 28),
-      Color.SILVER,
-    );
+  private createAvatar() {
     const offsets = [
       new Cartesian3(0, 0, 1.05),
       new Cartesian3(0, 0, 1.8),
@@ -266,72 +250,62 @@ export class SurfaceNavigation {
   private tick() {
     if (this.mode === "orbit") return;
     const now = performance.now(),
-      dt = Math.min(0.05, (now - this.lastTime) / 1000);
+      elapsed = Math.min(0.25, (now - this.lastTime) / 1000),
+      dt = Math.min(0.05, elapsed);
     this.lastTime = now;
+    if (this.baseTour) {
+      this.baseTour.tick(elapsed);
+      return;
+    }
     if (this.rover) {
       this.rover.tick(dt, this.keys);
       return;
     }
     let eye: Cartesian3, direction: Cartesian3;
-    if (this.mode === "base-tour") {
-      this.heading += dt * 0.15;
-      eye = new Cartesian3(
-        Math.sin(this.heading) * 180,
-        Math.cos(this.heading) * 180,
-        45,
+    this.heading +=
+      ((this.keys.has("ArrowRight") ? 1 : 0) -
+        (this.keys.has("ArrowLeft") ? 1 : 0)) *
+      dt;
+    this.pitch = Math.max(
+      -1.1,
+      Math.min(
+        1.1,
+        this.pitch +
+          ((this.keys.has("ArrowUp") ? 1 : 0) -
+            (this.keys.has("ArrowDown") ? 1 : 0)) *
+            dt,
+      ),
+    );
+    const forward =
+      Number(this.keys.has("KeyW")) - Number(this.keys.has("KeyS"));
+    const right = Number(this.keys.has("KeyD")) - Number(this.keys.has("KeyA"));
+    const speed = (this.keys.has("ShiftLeft") ? 9 : 3) * dt;
+    const next = new Cartesian3(
+      this.position.x +
+        (Math.sin(this.heading) * forward + Math.cos(this.heading) * right) *
+          speed,
+      this.position.y +
+        (Math.cos(this.heading) * forward - Math.sin(this.heading) * right) *
+          speed,
+      0,
+    );
+    if (!this.base?.contains(next.x, next.y)) this.position = next;
+    const third = this.mode === "third-person";
+    eye = new Cartesian3(
+      this.position.x - (third ? Math.sin(this.heading) * 8 : 0),
+      this.position.y - (third ? Math.cos(this.heading) * 8 : 0),
+      third ? 3.2 : 1.8,
+    );
+    const pitch = third ? this.pitch - 0.16 : this.pitch;
+    direction = new Cartesian3(
+      Math.sin(this.heading) * Math.cos(pitch),
+      Math.cos(this.heading) * Math.cos(pitch),
+      Math.sin(pitch),
+    );
+    for (const { primitive, offset } of this.avatar)
+      primitive.modelMatrix = this.modelFrame(
+        Cartesian3.add(this.position, offset, new Cartesian3()),
       );
-      direction = Cartesian3.normalize(
-        Cartesian3.subtract(new Cartesian3(0, 15, 5), eye, new Cartesian3()),
-        new Cartesian3(),
-      );
-    } else {
-      this.heading +=
-        ((this.keys.has("ArrowRight") ? 1 : 0) -
-          (this.keys.has("ArrowLeft") ? 1 : 0)) *
-        dt;
-      this.pitch = Math.max(
-        -1.1,
-        Math.min(
-          1.1,
-          this.pitch +
-            ((this.keys.has("ArrowUp") ? 1 : 0) -
-              (this.keys.has("ArrowDown") ? 1 : 0)) *
-              dt,
-        ),
-      );
-      const forward =
-        Number(this.keys.has("KeyW")) - Number(this.keys.has("KeyS"));
-      const right =
-        Number(this.keys.has("KeyD")) - Number(this.keys.has("KeyA"));
-      const speed = (this.keys.has("ShiftLeft") ? 9 : 3) * dt;
-      const next = new Cartesian3(
-        this.position.x +
-          (Math.sin(this.heading) * forward + Math.cos(this.heading) * right) *
-            speed,
-        this.position.y +
-          (Math.cos(this.heading) * forward - Math.sin(this.heading) * right) *
-            speed,
-        0,
-      );
-      const hitsHabitat = next.y > -0.5 && next.y < 31 && Math.abs(next.x) < 31;
-      if (!hitsHabitat) this.position = next;
-      const third = this.mode === "third-person";
-      eye = new Cartesian3(
-        this.position.x - (third ? Math.sin(this.heading) * 8 : 0),
-        this.position.y - (third ? Math.cos(this.heading) * 8 : 0),
-        third ? 3.2 : 1.8,
-      );
-      const pitch = third ? this.pitch - 0.16 : this.pitch;
-      direction = new Cartesian3(
-        Math.sin(this.heading) * Math.cos(pitch),
-        Math.cos(this.heading) * Math.cos(pitch),
-        Math.sin(pitch),
-      );
-      for (const { primitive, offset } of this.avatar)
-        primitive.modelMatrix = this.modelFrame(
-          Cartesian3.add(this.position, offset, new Cartesian3()),
-        );
-    }
     const up = new Cartesian3(
       -direction.x * direction.z,
       -direction.y * direction.z,
@@ -354,6 +328,10 @@ export class SurfaceNavigation {
     this.viewer.scene.requestRender();
   }
   private clear() {
+    this.baseTour?.dispose();
+    this.baseTour = undefined;
+    this.base?.dispose();
+    this.base = undefined;
     this.rover?.dispose();
     this.rover = undefined;
     this.keys.clear();
