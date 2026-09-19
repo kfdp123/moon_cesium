@@ -370,6 +370,14 @@
   font-size: 1.25rem;
   margin: 0;
 }
+.floating-panel.assistant-floating-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.assistant-floating-panel > .panel-heading {
+  flex-shrink: 0;
+}
 .floating-detail {
   left: auto;
   right: var(--edge);

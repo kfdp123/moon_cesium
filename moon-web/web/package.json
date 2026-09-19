@@ -5,9 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
+    "start": "node server/index.mjs",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run src",
+    "test:server": "node --test server/chat.test.mjs",
     "format": "prettier --write src e2e playwright.config.ts vite.config.ts tsconfig.json package.json index.html",
     "format:check": "prettier --check src e2e playwright.config.ts vite.config.ts tsconfig.json package.json index.html",
     "test:e2e": "playwright test"

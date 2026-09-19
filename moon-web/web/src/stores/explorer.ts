@@ -19,7 +19,9 @@ export const useExplorer = defineStore("explorer", () => {
   const selectedLandmark = ref<string | null>(null);
   const hiddenLayers = ref<LayerId[]>([]);
   const showGrid = ref(false);
-  const showLandmarks = ref(true);
+  // Keep the opening view uncluttered; the 科普/图层 controls can enable
+  // point markers and their outline regions when the user needs them.
+  const showLandmarks = ref(false);
   const epoch = computed(() => epochs[epochIndex.value]);
   const radiusKm = computed(() => layers.value[0].outerRadiusKm);
   const selection = computed(() =>

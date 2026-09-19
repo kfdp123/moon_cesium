@@ -1,6 +1,7 @@
 # Local source material and development tools
 /tmp/
 /files/
+/.local/
 /moon-web/files/
 /资料收集/
 /UE5_Cesium_PixelStreaming_Moon_Web_Demo_Implementation_Plan.md

@@ -28,6 +28,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Database,
+  MessagesSquare,
 } from "@lucide/vue";
 import MoonViewport from "./components/MoonViewport.vue";
 import GeologyViewport from "./components/GeologyViewport.vue";
@@ -54,6 +55,7 @@ import { epochs } from "./data/moon";
 import type { CutawayMode, NavigationMode, LunarPoint } from "./types";
 import type { PointModelState } from "./scene/PointModelLayer";
 import ScientificDataPanel from "./components/ScientificDataPanel.vue";
+import LunarAssistantPanel from "./components/LunarAssistantPanel.vue";
 import { useScienceData } from "./stores/scienceData";
 import type { ScientificQueryState } from "./scene/MoonScene";
 const explorer = useExplorer();
@@ -87,6 +89,7 @@ type Tool =
   | "points"
   | "science"
   | "scenes"
+  | "assistant"
   | "astronomy";
 const sceneMode = ref<SceneMode>("explore");
 const tab = ref<Tool | null>(null);
@@ -122,14 +125,23 @@ const workspaces = [
   { id: "roam", label: "月表漫游", icon: Footprints },
   { id: "system", label: "地月运动", icon: Orbit },
 ] as const;
+const assistantTool = {
+  id: "assistant",
+  label: "月球智能体",
+  icon: MessagesSquare,
+} as const;
 const tools = computed(() => {
-  if (exhibitOpen.value) return [];
+  if (exhibitOpen.value) return [assistantTool];
   if (sceneMode.value === "system")
-    return [{ id: "astronomy", label: "运动设置", icon: Settings }] as const;
+    return [
+      { id: "astronomy", label: "运动设置", icon: Settings },
+      assistantTool,
+    ] as const;
   if (sceneMode.value === "roam")
     return [
       { id: "scenes", label: "漫游方式", icon: Footprints },
       { id: "astronomy", label: "光照设置", icon: Sun },
+      assistantTool,
     ] as const;
   return [
     { id: "parameters", label: "参数模型", icon: SlidersHorizontal },
@@ -141,9 +153,11 @@ const tools = computed(() => {
           { id: "astronomy" as const, label: "光照设置", icon: Sun },
         ]
       : []),
+    assistantTool,
   ] as const;
 });
 const toolTitle: Record<Tool, string> = {
+  assistant: "月球智能体",
   parameters: "月球参数模型",
   maps: "图层管理",
   points: "科普探索",
@@ -152,6 +166,7 @@ const toolTitle: Record<Tool, string> = {
   astronomy: "光照与运动设置",
 };
 const toolCaption: Record<Tool, string> = {
+  assistant: "问答",
   parameters: "参数",
   maps: "图层",
   points: "科普",
@@ -213,7 +228,7 @@ watch(
 function openTool(tool: Tool) {
   if (tool === "points") endExplorationTheme();
   if (sceneMode.value === "interior") tour.pause();
-  closeDetails();
+  if (tool !== "assistant") closeDetails();
   welcomeOpen.value = false;
   tab.value = tab.value === tool ? null : tool;
 }
@@ -272,6 +287,54 @@ function selectWorkspace(value: SceneMode) {
 const landmark = computed(() =>
   catalog.points.find((p) => p.id === explorer.selectedLandmark),
 );
+const assistantContext = computed(() => ({
+  scene: {
+    name: sceneName.value,
+    exhibit: modelOpen.value
+      ? "分层模型展台"
+      : geologyOpen.value
+        ? "月球局部构造"
+        : null,
+    navigation: navigation.value,
+  },
+  epoch: {
+    label: explorer.epoch.label,
+    age: explorer.epoch.age,
+    parameterSource: "当前可调展示模型",
+    radiusKm: explorer.radiusKm,
+    cutaway: explorer.cutaway,
+    layers: explorer.layers.map((layer) => ({
+      name: layer.name,
+      innerRadiusKm: layer.innerRadiusKm,
+      outerRadiusKm: layer.outerRadiusKm,
+    })),
+  },
+  selectedPoint: landmark.value
+    ? {
+        id: landmark.value.id,
+        name: landmark.value.name,
+        longitude: landmark.value.longitude,
+        latitude: landmark.value.latitude,
+        description: landmark.value.description.slice(0, 1800),
+        source: landmark.value.source,
+      }
+    : null,
+  selectedLayer: explorer.selection ?? null,
+  scientificLayers: science.visibleLayers.slice(0, 8).map((layer) => ({
+    id: layer.id,
+    title: layer.title,
+    units: layer.units,
+    source: layer.source,
+    note: layer.note,
+  })),
+  query: scientificQuery.value
+    ? {
+        longitude: scientificQuery.value.longitude,
+        latitude: scientificQuery.value.latitude,
+        results: scientificQuery.value.results.slice(0, 8),
+      }
+    : null,
+}));
 const cuts: { id: CutawayMode; label: string }[] = [
   { id: "full", label: "完整球" },
   { id: "half", label: "移除一半" },
@@ -716,6 +779,7 @@ onBeforeUnmount(() => {
     <aside
       v-if="tab"
       class="floating-panel"
+      :class="{ 'assistant-floating-panel': tab === 'assistant' }"
       :aria-label="toolTitle[tab]"
       @input="pause"
     >
@@ -762,6 +826,10 @@ onBeforeUnmount(() => {
       >
       <PointPanel v-if="tab === 'points'" @locate="locate" />
       <ScientificDataPanel v-if="tab === 'science'" />
+      <LunarAssistantPanel
+        v-if="tab === 'assistant'"
+        :context="assistantContext"
+      />
       <AstronomyPanel v-if="tab === 'astronomy'" @base="inspectBase" />
       <section v-if="tab === 'scenes'" class="panel-section">
         <div class="section-label">场景漫游</div>
@@ -787,6 +855,7 @@ onBeforeUnmount(() => {
     <div
       v-if="
         !exhibitOpen &&
+        tab !== 'assistant' &&
         astronomy.view === 'moon' &&
         (explorer.selection || landmark || scientificQuery)
       "
